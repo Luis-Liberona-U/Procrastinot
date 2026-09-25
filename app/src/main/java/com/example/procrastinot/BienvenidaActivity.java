@@ -38,14 +38,23 @@ public class BienvenidaActivity extends AppCompatActivity {
                 }
         );
 
-        Button btnIniciarSesion =
-                findViewById(R.id.btnIniciarSesion);
+        Button btnIniciarSesion = findViewById(R.id.btnIniciarSesion);
+        Button btnCrearCuenta = findViewById(R.id.btnCrearCuenta);
 
         btnIniciarSesion.setOnClickListener(view -> {
 
             Intent intent = new Intent(
                     BienvenidaActivity.this,
                     LoginActivity.class
+            );
+
+            startActivity(intent);
+        });
+
+        btnCrearCuenta.setOnClickListener( v->{
+            Intent intent = new Intent(
+                    BienvenidaActivity.this,
+                    RegistroActivity.class
             );
 
             startActivity(intent);
