@@ -5,6 +5,7 @@ public class Usuario {
     private long id;
     private String nombre;
     private String correo;
+    private String passwordHash;
 
     public Usuario() {
     }
@@ -13,6 +14,16 @@ public class Usuario {
         this.id = id;
         this.nombre = nombre;
         this.correo = correo;
+    }
+
+    public Usuario(
+            long id,
+            String nombre,
+            String correo,
+            String passwordHash
+    ) {
+        this(id, nombre, correo);
+        this.passwordHash = passwordHash;
     }
 
     public long getId() {
@@ -37,5 +48,13 @@ public class Usuario {
 
     public void setCorreo(String correo) {
         this.correo = correo;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }
