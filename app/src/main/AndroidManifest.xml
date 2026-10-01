@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Procrastinot">
         <activity
-            android:name=".BienvenidaActivity"
+            android:name=".views.BienvenidaActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -22,15 +22,19 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".LoginActivity"
+            android:name=".views.LoginActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".RegistroActivity"
+            android:name=".views.RegistroActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".PrincipalActivity"
+            android:name=".views.PrincipalActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".views.CrearTareaActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
     </application>

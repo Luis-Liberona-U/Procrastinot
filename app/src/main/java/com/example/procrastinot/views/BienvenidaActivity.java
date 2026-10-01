@@ -1,4 +1,4 @@
-package com.example.procrastinot;
+package com.example.procrastinot.views;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,6 +9,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import com.example.procrastinot.R;
 
 public class BienvenidaActivity extends AppCompatActivity {
 
@@ -38,10 +40,10 @@ public class BienvenidaActivity extends AppCompatActivity {
                 }
         );
 
-        Button btnIniciarSesion = findViewById(R.id.btnIniciarSesion);
-        Button btnCrearCuenta = findViewById(R.id.btnCrearCuenta);
+        Button btnComenzar = findViewById(R.id.btnComenzar);
 
-        btnIniciarSesion.setOnClickListener(view -> {
+
+        btnComenzar.setOnClickListener(view -> {
 
             Intent intent = new Intent(
                     BienvenidaActivity.this,
@@ -51,13 +53,6 @@ public class BienvenidaActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        btnCrearCuenta.setOnClickListener( v->{
-            Intent intent = new Intent(
-                    BienvenidaActivity.this,
-                    RegistroActivity.class
-            );
 
-            startActivity(intent);
-        });
     }
 }
