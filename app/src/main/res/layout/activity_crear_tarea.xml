@@ -96,6 +96,74 @@
                 android:textAllCaps="false"
                 android:textSize="16sp" />
 
+            <TextView
+                android:id="@+id/txtTituloRepeticion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Repetición"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <RadioGroup
+                android:id="@+id/rgRepeticion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" >
+
+                <RadioButton
+                    android:id="@+id/rbUnaVez"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="Una vez" />
+
+                <RadioButton
+                    android:id="@+id/rbTodosLosDias"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="false"
+                    android:text="Todos los días" />
+
+                <RadioButton
+                    android:id="@+id/rbLunesaAViernes"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="false"
+                    android:text="Lunes a viernes" />
+
+                <RadioButton
+                    android:id="@+id/rbElegirDias"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="false"
+                    android:text="Perzonalizar" />
+            </RadioGroup>
+
+            <TextView
+                android:id="@+id/txtDuracion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Duracion estimada"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/edtDuracion"
+                android:layout_width="370dp"
+                android:layout_height="52dp"
+                android:layout_marginTop="8dp"
+                android:ems="10"
+                android:hint="Duracion en minutos"
+                android:inputType="number" />
+
+            <Button
+                android:id="@+id/btnGuardarTarea"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Guardar Tarea" />
+
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
