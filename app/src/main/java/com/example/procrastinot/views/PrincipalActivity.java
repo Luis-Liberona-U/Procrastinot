@@ -21,11 +21,21 @@ public class PrincipalActivity extends AppCompatActivity {
         setContentView(R.layout.activity_principal);
 
         Button btnCrearTarea = findViewById(R.id.btnCrearTarea);
+        Button btnVerTareas = findViewById(R.id.btnVerTareas);
 
         btnCrearTarea.setOnClickListener(v -> {
             Intent intent = new Intent(
                     PrincipalActivity.this,
                     CrearTareaActivity.class
+            );
+
+            startActivity(intent);
+        });
+
+        btnVerTareas.setOnClickListener(v -> {
+            Intent intent = new Intent(
+                    PrincipalActivity.this,
+                    TareasUsuarioActivity.class
             );
 
             startActivity(intent);
