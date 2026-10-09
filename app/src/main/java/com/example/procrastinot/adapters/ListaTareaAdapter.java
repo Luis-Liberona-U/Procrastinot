@@ -116,10 +116,42 @@ public class ListaTareaAdapter extends RecyclerView.Adapter<ListaTareaAdapter.Ta
             return "Diaria";
         }
 
-        return "Días elegidos";
+        if (Tarea.DIAS_SEMANA.equals(repeticion)) {
+            boolean[] dias = tarea.getDias();
+
+            boolean lunesAViernes =
+                    dias[0] && dias[1] && dias[2]
+                            && dias[3] && dias[4]
+                            && !dias[5] && !dias[6];
+
+            if (lunesAViernes) {
+                return "Lun-Vie";
+            }
+
+            String[] nombres = {
+                    "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"
+            };
+
+            StringBuilder resumen = new StringBuilder();
+
+            for (int i = 0; i < dias.length; i++) {
+                if (dias[i]) {
+                    if (resumen.length() > 0) {
+                        resumen.append(", ");
+                    }
+
+                    resumen.append(nombres[i]);
+                }
+            }
+
+            return resumen.length() == 0
+                    ? "Sin días"
+                    : resumen.toString();
+        }
+
+        return "Sin repetición";
     }
 
-    // Componentes de una fila
     static class TareaViewHolder extends RecyclerView.ViewHolder {
 
         final TextView nombre;

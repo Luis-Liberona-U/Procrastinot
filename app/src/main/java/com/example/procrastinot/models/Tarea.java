@@ -19,6 +19,7 @@ public class Tarea {
 
     private int duracionMinutos;
     private boolean activa;
+    private boolean[] dias = new boolean[7];
 
     public Tarea() {
         repeticion = UNA_VEZ;
@@ -127,4 +128,19 @@ public class Tarea {
     public void setActiva(boolean activa) {
         this.activa = activa;
     }
+
+    public boolean[] getDias() {
+        return dias.clone();
+    }
+
+    public void setDias(boolean[] dias) {
+        if (dias == null || dias.length != 7) {
+            throw new IllegalArgumentException(
+                    "Se necesitan siete posiciones para los días"
+            );
+        }
+
+        this.dias = dias.clone();
+    }
+
 }

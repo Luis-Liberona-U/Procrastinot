@@ -1,5 +1,6 @@
 package com.example.procrastinot.views;
 
+import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -14,72 +15,126 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.procrastinot.R;
 import com.example.procrastinot.adapters.ListaTareaAdapter;
 import com.example.procrastinot.models.Tarea;
+import com.example.procrastinot.repositories.TareaRepository;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class TareasUsuarioActivity extends AppCompatActivity {
+
+    private long usuarioId = -1;
+    private ListaTareaAdapter adapter;
+
+    private final ExecutorService executor =
+            Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_tareas_usuario);
 
-        RecyclerView rvTareas = findViewById(R.id.rvTareas);
+        usuarioId = getIntent().getLongExtra("usuario_id", -1);
 
-// Organiza las tareas una debajo de otra
+        if (usuarioId == -1) {
+            Toast.makeText(this, "No se recibió el usuario. Inicia sesión nuevamente.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+
+        RecyclerView rvTareas = findViewById(R.id.rvTareas);
         rvTareas.setLayoutManager(new LinearLayoutManager(this));
 
-        // Define que dependiendo de la opcion
-        ListaTareaAdapter adapter = new ListaTareaAdapter(
+        adapter = new ListaTareaAdapter(
                 new ListaTareaAdapter.AccionesTarea() {
+
                     @Override
-                    public void editar(Tarea tarea) {Toast.makeText(TareasUsuarioActivity.this, "Editar: " + tarea.getNombre(),Toast.LENGTH_SHORT).show();
+                    public void editar(Tarea tarea) {
+                        Toast.makeText(TareasUsuarioActivity.this, "Editar: " + tarea.getNombre(), Toast.LENGTH_SHORT).show();
                     }
+
                     @Override
-                    public void eliminar(Tarea tarea) {Toast.makeText(TareasUsuarioActivity.this, "Eliminar: " + tarea.getNombre(), Toast.LENGTH_SHORT).show();
+                    public void eliminar(Tarea tarea) {
+                        Toast.makeText(TareasUsuarioActivity.this, "Eliminar: " + tarea.getNombre(), Toast.LENGTH_SHORT).show();
                     }
+
                     @Override
                     public void cambiarActiva(Tarea tarea, boolean activa) {
-                        tarea.setActiva(activa);Toast.makeText(TareasUsuarioActivity.this, activa ? "Tarea activada" : "Tarea desactivada", Toast.LENGTH_SHORT).show();
+                        cargarTareas();
+                        Toast.makeText(TareasUsuarioActivity.this, "El cambio de estado aún está pendiente", Toast.LENGTH_SHORT).show();
                     }
                 }
         );
 
-// Conecta el adaptador con la lista
         rvTareas.setAdapter(adapter);
 
-// Datos de prueba
-        Tarea ejemplo = new Tarea();
-        ejemplo.setId(1L);
-        ejemplo.setNombre("Estudiar Java");
-        ejemplo.setHoraInicio(18);
-        ejemplo.setMinutoInicio(30);
-        ejemplo.setRepeticion(Tarea.DIARIA);
-        ejemplo.setActiva(true);
+        ViewCompat.setOnApplyWindowInsetsListener(
+                findViewById(R.id.main),
+                (v, insets) -> {
+                    Insets systemBars = insets.getInsets(
+                            WindowInsetsCompat.Type.systemBars()
+                    );
 
-        List<Tarea> tareasPrueba = new ArrayList<>();
-        tareasPrueba.add(ejemplo);
+                    v.setPadding(
+                            systemBars.left,
+                            systemBars.top,
+                            systemBars.right,
+                            systemBars.bottom
+                    );
 
-        Tarea fortnite = new Tarea();
-        ejemplo.setId(2L);
-        ejemplo.setNombre("Jugar Fornite");
-        ejemplo.setHoraInicio(20);
-        ejemplo.setMinutoInicio(30);
-        ejemplo.setRepeticion(Tarea.DIARIA);
-        ejemplo.setActiva(true);
+                    return insets;
+                }
+        );
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
 
-        tareasPrueba.add(fortnite);
+        if (usuarioId != -1 && adapter != null) {
+            cargarTareas();
+        }
+    }
 
-// Entrega los datos al adaptador
-        adapter.actualizarLista(tareasPrueba);
+    private void cargarTareas() {
+        executor.execute(() -> {
+            TareaRepository repository = new TareaRepository(getApplicationContext());
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+            try {
+                List<Tarea> tareas = repository.listarPorUsuario(usuarioId);
+
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+
+                    adapter.actualizarLista(tareas);
+
+                    if (tareas.isEmpty()) {
+                        Toast.makeText(TareasUsuarioActivity.this, "Todavía no tienes tareas creadas", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+            } catch (SQLiteException e) {
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+
+                    Toast.makeText(TareasUsuarioActivity.this, "No se pudieron cargar las tareas", Toast.LENGTH_LONG).show();
+                });
+
+            } finally {
+                repository.cerrar();
+            }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        executor.shutdown();
+        super.onDestroy();
     }
 }
