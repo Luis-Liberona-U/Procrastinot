@@ -10,11 +10,13 @@ import com.example.procrastinot.database.ProcrastinotContract.TareaDias;
 import com.example.procrastinot.database.ProcrastinotDbHelper;
 import com.example.procrastinot.models.Tarea;
 
-
 import java.util.ArrayList;
 import java.util.List;
+
 public class TareaRepository {
+
     private final ProcrastinotDbHelper helper;
+
     public TareaRepository(Context context) {
         helper = new ProcrastinotDbHelper(context);
     }
@@ -46,6 +48,7 @@ public class TareaRepository {
             valores.put(Tareas.COLUMN_FECHA_UNICA, fechaUnica);
             valores.put(Tareas.COLUMN_DURACION, duracionMinutos);
             valores.put(Tareas.COLUMN_ACTIVA, 1);
+            valores.put(Tareas.COLUMN_ELIMINADA, 0);
 
             long tareaId = db.insertOrThrow(
                     Tareas.TABLE_NAME,
@@ -53,11 +56,9 @@ public class TareaRepository {
                     valores
             );
 
-            if ("DIAS_SEMANA".equals(repeticion)) {
+            if (Tarea.DIAS_SEMANA.equals(repeticion)) {
                 if (dias == null || dias.length != 7) {
-                    throw new IllegalArgumentException(
-                            "Debes proporcionar los siete días"
-                    );
+                    throw new IllegalArgumentException("Debes proporcionar los siete días");
                 }
 
                 boolean hayDia = false;
@@ -105,8 +106,12 @@ public class TareaRepository {
 
         List<Tarea> tareas = new ArrayList<>();
 
-        String filtro = Tareas.COLUMN_USUARIO_ID + " = ?";
-        String[] argumentos = {String.valueOf(usuarioId)};
+        String filtro = Tareas.COLUMN_USUARIO_ID + " = ? AND "
+                + Tareas.COLUMN_ELIMINADA + " = 0";
+
+        String[] argumentos = {
+                String.valueOf(usuarioId)
+        };
 
         String orden = Tareas.COLUMN_HORA_INICIO + " ASC, "
                 + Tareas.COLUMN_MINUTO_INICIO + " ASC, "
@@ -182,8 +187,16 @@ public class TareaRepository {
                         )
                 ) == 1);
 
+                tarea.setEliminada(cursor.getInt(
+                        cursor.getColumnIndexOrThrow(
+                                Tareas.COLUMN_ELIMINADA
+                        )
+                ) == 1);
+
                 if (Tarea.DIAS_SEMANA.equals(tarea.getRepeticion())) {
-                    tarea.setDias(consultarDias(db, tarea.getId()));
+                    tarea.setDias(
+                            consultarDias(db, tarea.getId())
+                    );
                 }
 
                 tareas.add(tarea);
@@ -192,8 +205,63 @@ public class TareaRepository {
 
         return tareas;
     }
-    public void cerrar() {
-        helper.close();
+
+    public boolean cambiarEstado(
+            long tareaId,
+            long usuarioId,
+            boolean activa
+    ) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+
+        ContentValues valores = new ContentValues();
+        valores.put(Tareas.COLUMN_ACTIVA, activa ? 1 : 0);
+
+        String filtro = Tareas._ID + " = ? AND "
+                + Tareas.COLUMN_USUARIO_ID + " = ? AND "
+                + Tareas.COLUMN_ELIMINADA + " = 0";
+
+        String[] argumentos = {
+                String.valueOf(tareaId),
+                String.valueOf(usuarioId)
+        };
+
+        int filas = db.update(
+                Tareas.TABLE_NAME,
+                valores,
+                filtro,
+                argumentos
+        );
+
+        return filas == 1;
+    }
+
+    public boolean eliminarTarea(
+            long tareaId,
+            long usuarioId
+    ) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+
+        ContentValues valores = new ContentValues();
+        valores.put(Tareas.COLUMN_ELIMINADA, 1);
+        valores.put(Tareas.COLUMN_ACTIVA, 0);
+
+        String filtro = Tareas._ID + " = ? AND "
+                + Tareas.COLUMN_USUARIO_ID + " = ? AND "
+                + Tareas.COLUMN_ELIMINADA + " = 0";
+
+        String[] argumentos = {
+                String.valueOf(tareaId),
+                String.valueOf(usuarioId)
+        };
+
+        int filas = db.update(
+                Tareas.TABLE_NAME,
+                valores,
+                filtro,
+                argumentos
+        );
+
+        return filas == 1;
     }
 
     private boolean[] consultarDias(
@@ -225,5 +293,9 @@ public class TareaRepository {
         }
 
         return dias;
+    }
+
+    public void cerrar() {
+        helper.close();
     }
 }

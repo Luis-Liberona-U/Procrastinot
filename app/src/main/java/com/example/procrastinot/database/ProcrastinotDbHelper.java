@@ -12,7 +12,7 @@ import com.example.procrastinot.database.ProcrastinotContract.RegistroTarea;
 public class ProcrastinotDbHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "procrastinot.db";
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2;
 
     private static final String SQL_CREATE_USUARIOS =
             "CREATE TABLE " + Usuarios.TABLE_NAME + " (" +
@@ -24,17 +24,26 @@ public class ProcrastinotDbHelper extends SQLiteOpenHelper {
 
     private static final String SQL_CREATE_TAREAS =
             "CREATE TABLE " + Tareas.TABLE_NAME + " (" +
+
                     Tareas._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     Tareas.COLUMN_USUARIO_ID + " INTEGER NOT NULL, " +
                     Tareas.COLUMN_NOMBRE + " TEXT NOT NULL, " +
                     Tareas.COLUMN_DESCRIPCION + " TEXT, " +
 
-                    Tareas.COLUMN_HORA_INICIO + " INTEGER NOT NULL CHECK(" +
-                    Tareas.COLUMN_HORA_INICIO + " BETWEEN 0 AND 23), " +
+                    Tareas.COLUMN_HORA_INICIO +
+                    " INTEGER NOT NULL CHECK(" +
+                    Tareas.COLUMN_HORA_INICIO +
+                    " BETWEEN 0 AND 23), " +
 
-                    Tareas.COLUMN_MINUTO_INICIO + " INTEGER NOT NULL CHECK(" + Tareas.COLUMN_MINUTO_INICIO + " BETWEEN 0 AND 59), " +
+                    Tareas.COLUMN_MINUTO_INICIO +
+                    " INTEGER NOT NULL CHECK(" +
+                    Tareas.COLUMN_MINUTO_INICIO +
+                    " BETWEEN 0 AND 59), " +
 
-                    Tareas.COLUMN_REPETICION + " TEXT NOT NULL CHECK(" + Tareas.COLUMN_REPETICION + " IN ('UNA_VEZ', 'DIARIA', 'DIAS_SEMANA')), " +
+                    Tareas.COLUMN_REPETICION +
+                    " TEXT NOT NULL CHECK(" +
+                    Tareas.COLUMN_REPETICION +
+                    " IN ('UNA_VEZ', 'DIARIA', 'DIAS_SEMANA')), " +
 
                     Tareas.COLUMN_FECHA_UNICA + " TEXT, " +
 
@@ -46,6 +55,10 @@ public class ProcrastinotDbHelper extends SQLiteOpenHelper {
                     " INTEGER NOT NULL DEFAULT 1 CHECK(" +
                     Tareas.COLUMN_ACTIVA + " IN (0, 1)), " +
 
+                    Tareas.COLUMN_ELIMINADA +
+                    " INTEGER NOT NULL DEFAULT 0 CHECK(" +
+                    Tareas.COLUMN_ELIMINADA + " IN (0, 1)), " +
+
                     "CHECK(" + Tareas.COLUMN_REPETICION +
                     " != 'UNA_VEZ' OR " +
                     Tareas.COLUMN_FECHA_UNICA + " IS NOT NULL), " +
@@ -53,6 +66,7 @@ public class ProcrastinotDbHelper extends SQLiteOpenHelper {
                     "FOREIGN KEY(" + Tareas.COLUMN_USUARIO_ID + ") " +
                     "REFERENCES " + Usuarios.TABLE_NAME +
                     "(" + Usuarios._ID + ")" +
+
                     ")";
 
     private static final String SQL_CREATE_TAREA_DIAS =
@@ -130,6 +144,15 @@ public class ProcrastinotDbHelper extends SQLiteOpenHelper {
             int oldVersion,
             int newVersion
     ) {
-
+        if (oldVersion < 2) {
+            db.execSQL(
+                    "ALTER TABLE " + Tareas.TABLE_NAME
+                            + " ADD COLUMN " + Tareas.COLUMN_ELIMINADA
+                            + " INTEGER NOT NULL DEFAULT 0"
+                            + " CHECK ("
+                            + Tareas.COLUMN_ELIMINADA
+                            + " IN (0, 1))"
+            );
+        }
     }
 }

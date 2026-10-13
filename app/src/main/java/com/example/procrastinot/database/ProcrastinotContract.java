@@ -32,6 +32,8 @@ public final class ProcrastinotContract {
         public static final String COLUMN_FECHA_UNICA = "fecha_unica";
         public static final String COLUMN_DURACION = "duracion_minutos";
         public static final String COLUMN_ACTIVA = "activa";
+        public static final String COLUMN_ELIMINADA = "eliminada";
+
 
         private Tareas() {
         }

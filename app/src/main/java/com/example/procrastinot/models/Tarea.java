@@ -19,6 +19,8 @@ public class Tarea {
 
     private int duracionMinutos;
     private boolean activa;
+    private boolean eliminada = false;
+
     private boolean[] dias = new boolean[7];
 
     public Tarea() {
@@ -26,7 +28,8 @@ public class Tarea {
         activa = true;
     }
 
-    public Tarea(long id,
+    public Tarea(
+            long id,
             long usuarioId,
             String nombre,
             String descripcion,
@@ -129,18 +132,23 @@ public class Tarea {
         this.activa = activa;
     }
 
+    public boolean isEliminada() {
+        return eliminada;
+    }
+
+    public void setEliminada(boolean eliminada) {
+        this.eliminada = eliminada;
+    }
+
     public boolean[] getDias() {
         return dias.clone();
     }
 
     public void setDias(boolean[] dias) {
         if (dias == null || dias.length != 7) {
-            throw new IllegalArgumentException(
-                    "Se necesitan siete posiciones para los días"
-            );
+            throw new IllegalArgumentException("Se necesitan siete posiciones para los días");
         }
 
         this.dias = dias.clone();
     }
-
 }

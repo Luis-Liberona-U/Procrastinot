@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".views.RealizarTareaActivity">
+
+    <ScrollView
+        android:id="@+id/scrollRealizarTarea"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:id="@+id/layoutRealizarTarea"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp" >
+
+            <TextView
+                android:id="@+id/txtNombreTareaRealizar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="12dp"
+                android:text="Limpiar Cocina"
+                android:textAlignment="center"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtDescripcionTareaRealizar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:text="Lavar platos y limpiar mesa"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/txtFotoAntes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Toma una foto inicial. Es obligatorio*"
+                android:textSize="18sp" />
+
+            <ImageView
+                android:id="@+id/imgFotoAntes"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:layout_marginBottom="16dp"
+                android:contentDescription="Foto del estado inicial de la tarea"
+                android:scaleType="fitCenter"
+                tools:srcCompat="@tools:sample/backgrounds/scenic" />
+
+            <Button
+                android:id="@+id/btnTomarFotoAntes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:minHeight="48dp"
+                android:text="Tomar foto antes"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/btnIniciarTarea"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:enabled="false"
+                android:minHeight="48dp"
+                android:text="Iniciar Tarea"
+                android:textAllCaps="false" />
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
