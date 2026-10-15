@@ -345,8 +345,18 @@ public class FinalizarTareaActivity extends AppCompatActivity {
                         return;
                     }
 
-                    Toast.makeText(this, "Tarea completada. Resultado guardado.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(
+                            this, "Tarea completada. Resultado guardado.", Toast.LENGTH_SHORT).show();
 
+                    Intent intent = new Intent(
+                            FinalizarTareaActivity.this,
+                            ResultadoTareaActivity.class
+                    );
+
+                    intent.putExtra("usuario_id", usuarioId);
+                    intent.putExtra("registro_id", registroId);
+
+                    startActivity(intent);
                     finish();
                 });
 

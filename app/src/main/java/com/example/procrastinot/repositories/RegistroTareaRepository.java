@@ -232,6 +232,34 @@ public class RegistroTareaRepository {
                 argumentos
         ) == 1;
     }
+
+    public String obtenerNombreTarea(long tareaId, long usuarioId) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+
+        String filtro = Tareas._ID + " = ? AND "
+                + Tareas.COLUMN_USUARIO_ID + " = ?";
+
+        String[] argumentos = {
+                String.valueOf(tareaId),
+                String.valueOf(usuarioId)
+        };
+
+        try (Cursor cursor = db.query(
+                Tareas.TABLE_NAME,
+                new String[]{Tareas.COLUMN_NOMBRE},
+                filtro,
+                argumentos,
+                null,
+                null,
+                null
+        )) {
+            if (cursor.moveToFirst()) {
+                return cursor.getString(cursor.getColumnIndexOrThrow(Tareas.COLUMN_NOMBRE));
+            }
+
+            return "Resultado de la tarea";
+        }
+    }
     public void cerrar() {
         helper.close();
     }

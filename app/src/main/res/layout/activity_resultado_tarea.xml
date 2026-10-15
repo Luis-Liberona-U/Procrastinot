@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".views.ResultadoTareaActivity">
+
+    <ScrollView
+        android:id="@+id/scrollResultadoTarea"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:id="@+id/layoutResultadoTarea"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp" >
+
+            <TextView
+                android:id="@+id/txtNombreTareaResultado"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="Limpiar  Cocina"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtTiempoResultado"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:text="TiempoEmpleado"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/txtEtiquetaAntes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Antes"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/imgAntesResultado"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:layout_marginBottom="24dp"
+                android:contentDescription="Foto antes de realizar la tarea"
+                android:scaleType="fitCenter"
+                tools:srcCompat="@tools:sample/backgrounds/scenic" />
+
+            <TextView
+                android:id="@+id/txtEtiquetaDespues"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Después"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/imgDespuesResultado"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:layout_marginBottom="24dp"
+                android:contentDescription="Foto después de realizar la tarea"
+                android:scaleType="fitCenter"
+                tools:srcCompat="@tools:sample/backgrounds/scenic" />
+
+            <Button
+                android:id="@+id/btnVolverPrincipal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="24dp"
+                android:minHeight="48dp"
+                android:text="Volver al Inicio"
+                android:textAllCaps="false" />
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
