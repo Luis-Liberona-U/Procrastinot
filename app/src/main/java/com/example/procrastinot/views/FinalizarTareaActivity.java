@@ -1,8 +1,10 @@
 package com.example.procrastinot.views;
 
+import android.Manifest;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -19,6 +21,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -88,6 +91,17 @@ public class FinalizarTareaActivity extends AppCompatActivity {
                     }
             );
 
+    private final ActivityResultLauncher<String> permisoCamaraLauncher = registerForActivityResult(
+                    new ActivityResultContracts.RequestPermission(),
+                    concedido -> {
+                        if (concedido) {
+                            abrirCamara();
+                        } else {
+                            Toast.makeText(this, "Necesitas permitir la cámara para tomar la foto.", Toast.LENGTH_LONG).show();
+                        }
+                    }
+            );
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,17 +118,14 @@ public class FinalizarTareaActivity extends AppCompatActivity {
             return;
         }
 
-        TextView txtNombre =
-                findViewById(R.id.txtNombreTareaFinalizar);
+        TextView txtNombre = findViewById(R.id.txtNombreTareaFinalizar);
 
         txtTiempoFinal = findViewById(R.id.txtTiempoFinal);
         imgFotoDespues = findViewById(R.id.imgFotoDespues);
 
-        btnTomarFotoDespues =
-                findViewById(R.id.btnTomarFotoDespues);
+        btnTomarFotoDespues = findViewById(R.id.btnTomarFotoDespues);
 
-        btnGuardarResultado =
-                findViewById(R.id.btnGuardarResultado);
+        btnGuardarResultado = findViewById(R.id.btnGuardarResultado);
 
         String nombre = getIntent().getStringExtra("tarea_nombre");
         txtNombre.setText(nombre == null ? "Finalizar tarea" : nombre);
@@ -137,7 +148,7 @@ public class FinalizarTareaActivity extends AppCompatActivity {
 
         actualizarBotones();
 
-        btnTomarFotoDespues.setOnClickListener(v -> abrirCamara());
+        btnTomarFotoDespues.setOnClickListener(v -> comprobarPermisoCamara());
         btnGuardarResultado.setOnClickListener(v -> guardarResultado());
 
         ViewCompat.setOnApplyWindowInsetsListener(
@@ -166,8 +177,7 @@ public class FinalizarTareaActivity extends AppCompatActivity {
             RegistroTareaRepository repository = new RegistroTareaRepository(getApplicationContext());
 
             try {
-                RegistroTarea registro =
-                        repository.obtenerRegistro(registroId, usuarioId);
+                RegistroTarea registro = repository.obtenerRegistro(registroId, usuarioId);
 
                 runOnUiThread(() -> {
                     if (isFinishing() || isDestroyed()) {
@@ -388,6 +398,18 @@ public class FinalizarTareaActivity extends AppCompatActivity {
         btnGuardarResultado.setEnabled(
                 disponible && rutaFotoDespues != null
         );
+    }
+
+    // Permiso de camara
+    private void comprobarPermisoCamara() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED) {
+            abrirCamara();
+        } else {
+            permisoCamaraLauncher.launch(Manifest.permission.CAMERA);
+        }
     }
 
     @Override

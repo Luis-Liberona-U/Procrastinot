@@ -1,8 +1,10 @@
 package com.example.procrastinot.views;
 
+import android.Manifest;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -19,6 +21,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -160,6 +163,18 @@ public class RealizarTareaActivity extends AppCompatActivity {
         });
     }
 
+    private final ActivityResultLauncher<String> permisoCamaraLauncher =
+            registerForActivityResult(
+                    new ActivityResultContracts.RequestPermission(),
+                    concedido -> {
+                        if (concedido) {
+                            abrirCamara();
+                        } else {
+                            Toast.makeText(this, "Necesitas permitir la cámara para tomar la foto.", Toast.LENGTH_LONG).show();
+                        }
+                    }
+            );
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -214,7 +229,7 @@ public class RealizarTareaActivity extends AppCompatActivity {
             btnTomarFotoAntes.setEnabled(rutaFotoPendiente == null);
         }
 
-        btnTomarFotoAntes.setOnClickListener(v -> abrirCamara());
+        btnTomarFotoAntes.setOnClickListener(v -> comprobarPermisoCamara());
 
         btnIniciarTarea.setOnClickListener(v -> iniciarTarea());
 
@@ -316,6 +331,17 @@ public class RealizarTareaActivity extends AppCompatActivity {
 
         imgFotoAntes.setImageBitmap(foto);
         return true;
+    }
+
+    private void comprobarPermisoCamara() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED) {
+            abrirCamara();
+        } else {
+            permisoCamaraLauncher.launch(Manifest.permission.CAMERA);
+        }
     }
 
     @Override
