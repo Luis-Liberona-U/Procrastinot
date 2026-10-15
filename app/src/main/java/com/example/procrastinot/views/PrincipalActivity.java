@@ -111,6 +111,21 @@ private long usuarioId; //Guarda id del usuario
             startActivity(intent);
         });
 
+        Button btnHistorial = findViewById(R.id.btnHistorial);
+
+        btnHistorial.setOnClickListener(v -> {
+            Intent intent = new Intent(
+                    PrincipalActivity.this,
+                    HistorialTareasActivity.class
+            );
+
+            intent.putExtra("usuario_id", usuarioId);
+            startActivity(intent);
+        });
+
+
+
+
 // Botón abrir la próxima tarea
         btnComenzarTarea.setOnClickListener(v -> {
             if (tareaProxima == null) {
@@ -345,6 +360,12 @@ private long usuarioId; //Guarda id del usuario
 
         return -1;
     }
+
+
+
+
+
+
 
     @Override
     protected void onDestroy() {

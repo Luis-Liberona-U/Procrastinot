@@ -9,6 +9,9 @@ import com.example.procrastinot.database.ProcrastinotContract.RegistroTarea;
 import com.example.procrastinot.database.ProcrastinotContract.Tareas;
 import com.example.procrastinot.database.ProcrastinotDbHelper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class RegistroTareaRepository {
 
     private final ProcrastinotDbHelper helper;
@@ -260,6 +263,72 @@ public class RegistroTareaRepository {
             return "Resultado de la tarea";
         }
     }
+
+    public List<com.example.procrastinot.models.RegistroTarea>
+    listarHistorial(long usuarioId) {
+
+        SQLiteDatabase db = helper.getReadableDatabase();
+
+        List<com.example.procrastinot.models.RegistroTarea> registros =
+                new ArrayList<>();
+
+        String sql = "SELECT "
+                + "r." + RegistroTarea._ID + " AS registro_id, "
+                + "r." + RegistroTarea.COLUMN_TAREA_ID + " AS tarea_id, "
+                + "t." + Tareas.COLUMN_NOMBRE + " AS nombre_tarea, "
+                + "r." + RegistroTarea.COLUMN_INICIO_REAL + " AS inicio_real, "
+                + "r." + RegistroTarea.COLUMN_FIN_REAL + " AS fin_real "
+                + "FROM " + RegistroTarea.TABLE_NAME + " r "
+                + "INNER JOIN " + Tareas.TABLE_NAME + " t "
+                + "ON r." + RegistroTarea.COLUMN_TAREA_ID + " = t." + Tareas._ID
+                + " WHERE t." + Tareas.COLUMN_USUARIO_ID + " = ?"
+                + " AND r." + RegistroTarea.COLUMN_ESTADO + " = ?"
+                + " AND r." + RegistroTarea.COLUMN_INICIO_REAL + " IS NOT NULL"
+                + " AND r." + RegistroTarea.COLUMN_FIN_REAL + " IS NOT NULL"
+                + " ORDER BY r." + RegistroTarea.COLUMN_FIN_REAL + " DESC, "
+                + "r." + RegistroTarea._ID + " DESC";
+
+        String[] argumentos = {
+                String.valueOf(usuarioId),
+                com.example.procrastinot.models.RegistroTarea.COMPLETADA
+        };
+
+        try (Cursor cursor = db.rawQuery(sql, argumentos)) {
+            while (cursor.moveToNext()) {
+                com.example.procrastinot.models.RegistroTarea registro =
+                        new com.example.procrastinot.models.RegistroTarea();
+
+                registro.setId(cursor.getLong(
+                        cursor.getColumnIndexOrThrow("registro_id")
+                ));
+
+                registro.setTareaId(cursor.getLong(
+                        cursor.getColumnIndexOrThrow("tarea_id")
+                ));
+
+                registro.setNombreTarea(cursor.getString(
+                        cursor.getColumnIndexOrThrow("nombre_tarea")
+                ));
+
+                registro.setInicioReal(cursor.getLong(
+                        cursor.getColumnIndexOrThrow("inicio_real")
+                ));
+
+                registro.setFinReal(cursor.getLong(
+                        cursor.getColumnIndexOrThrow("fin_real")
+                ));
+
+                registro.setEstado(
+                        com.example.procrastinot.models.RegistroTarea.COMPLETADA
+                );
+
+                registros.add(registro);
+            }
+        }
+
+        return registros;
+    }
+
     public void cerrar() {
         helper.close();
     }

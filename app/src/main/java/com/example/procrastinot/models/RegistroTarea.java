@@ -17,6 +17,9 @@ public class RegistroTarea {
     private String fotoAntes;
     private String fotoDespues;
 
+    // Atributo usado para el Historial
+    private String nombreTarea;
+
     public RegistroTarea() {
         estado = PENDIENTE;
     }
@@ -103,4 +106,10 @@ public class RegistroTarea {
     public void setFotoDespues(String fotoDespues) {
         this.fotoDespues = fotoDespues;
     }
+
+    // Metodos para el historial
+    public String getNombreTarea() {return nombreTarea;}
+
+
+    public void setNombreTarea(String nombreTarea) {this.nombreTarea = nombreTarea;}
 }
