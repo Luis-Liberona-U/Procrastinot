@@ -295,6 +295,180 @@ public class TareaRepository {
         return dias;
     }
 
+    public Tarea obtenerPorId(long tareaId, long usuarioId) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+
+        String filtro = Tareas._ID + " = ? AND "
+                + Tareas.COLUMN_USUARIO_ID + " = ? AND "
+                + Tareas.COLUMN_ELIMINADA + " = 0";
+
+        String[] argumentos = {
+                String.valueOf(tareaId),
+                String.valueOf(usuarioId)
+        };
+
+        try (Cursor cursor = db.query(
+                Tareas.TABLE_NAME,
+                null,
+                filtro,
+                argumentos,
+                null,
+                null,
+                null
+        )) {
+            if (!cursor.moveToFirst()) {
+                return null;
+            }
+
+            Tarea tarea = new Tarea();
+
+            tarea.setId(tareaId);
+            tarea.setUsuarioId(usuarioId);
+
+            tarea.setNombre(cursor.getString(
+                    cursor.getColumnIndexOrThrow(Tareas.COLUMN_NOMBRE)
+            ));
+
+            tarea.setDescripcion(cursor.getString(
+                    cursor.getColumnIndexOrThrow(Tareas.COLUMN_DESCRIPCION)
+            ));
+
+            tarea.setHoraInicio(cursor.getInt(
+                    cursor.getColumnIndexOrThrow(Tareas.COLUMN_HORA_INICIO)
+            ));
+
+            tarea.setMinutoInicio(cursor.getInt(
+                    cursor.getColumnIndexOrThrow(Tareas.COLUMN_MINUTO_INICIO)
+            ));
+
+            tarea.setRepeticion(cursor.getString(
+                    cursor.getColumnIndexOrThrow(Tareas.COLUMN_REPETICION)
+            ));
+
+            tarea.setFechaUnica(cursor.getString(
+                    cursor.getColumnIndexOrThrow(Tareas.COLUMN_FECHA_UNICA)
+            ));
+
+            tarea.setDuracionMinutos(cursor.getInt(
+                    cursor.getColumnIndexOrThrow(Tareas.COLUMN_DURACION)
+            ));
+
+            tarea.setActiva(cursor.getInt(
+                    cursor.getColumnIndexOrThrow(Tareas.COLUMN_ACTIVA)
+            ) == 1);
+
+            if (Tarea.DIAS_SEMANA.equals(tarea.getRepeticion())) {
+                tarea.setDias(consultarDias(db, tareaId));
+            }
+
+            return tarea;
+        }
+    }
+
+    public boolean actualizarTarea(
+            long tareaId,
+            long usuarioId,
+            String nombre,
+            String descripcion,
+            int hora,
+            int minuto,
+            String repeticion,
+            String fechaUnica,
+            int duracionMinutos,
+            boolean[] dias
+    ) {
+        // Validamos los días antes de modificar la base.
+        if (Tarea.DIAS_SEMANA.equals(repeticion)) {
+            if (dias == null || dias.length != 7) {
+                throw new IllegalArgumentException(
+                        "Debes proporcionar los siete días"
+                );
+            }
+
+            boolean hayDia = false;
+
+            for (boolean seleccionado : dias) {
+                if (seleccionado) {
+                    hayDia = true;
+                    break;
+                }
+            }
+
+            if (!hayDia) {
+                throw new IllegalArgumentException(
+                        "Selecciona al menos un día"
+                );
+            }
+        }
+
+        SQLiteDatabase db = helper.getWritableDatabase();
+
+        db.beginTransaction();
+
+        try {
+            ContentValues valores = new ContentValues();
+
+            valores.put(Tareas.COLUMN_NOMBRE, nombre);
+            valores.put(Tareas.COLUMN_DESCRIPCION, descripcion);
+            valores.put(Tareas.COLUMN_HORA_INICIO, hora);
+            valores.put(Tareas.COLUMN_MINUTO_INICIO, minuto);
+            valores.put(Tareas.COLUMN_REPETICION, repeticion);
+            valores.put(Tareas.COLUMN_FECHA_UNICA, fechaUnica);
+            valores.put(Tareas.COLUMN_DURACION, duracionMinutos);
+
+            String filtro = Tareas._ID + " = ? AND "
+                    + Tareas.COLUMN_USUARIO_ID + " = ? AND "
+                    + Tareas.COLUMN_ELIMINADA + " = 0";
+
+            String[] argumentos = {
+                    String.valueOf(tareaId),
+                    String.valueOf(usuarioId)
+            };
+
+            int filas = db.update(
+                    Tareas.TABLE_NAME,
+                    valores,
+                    filtro,
+                    argumentos
+            );
+
+            if (filas != 1) {
+                return false;
+            }
+
+            db.delete(
+                    TareaDias.TABLE_NAME,
+                    TareaDias.COLUMN_TAREA_ID + " = ?",
+                    new String[]{String.valueOf(tareaId)}
+            );
+
+            // Guardamos la nueva configuración, si es semanal.
+            if (Tarea.DIAS_SEMANA.equals(repeticion)) {
+                for (int i = 0; i < dias.length; i++) {
+                    if (dias[i]) {
+                        ContentValues valoresDia = new ContentValues();
+
+                        valoresDia.put(TareaDias.COLUMN_TAREA_ID, tareaId);
+                        valoresDia.put(TareaDias.COLUMN_DIA_SEMANA, i + 1);
+
+                        db.insertOrThrow(
+                                TareaDias.TABLE_NAME,
+                                null,
+                                valoresDia
+                        );
+                    }
+                }
+            }
+
+            db.setTransactionSuccessful();
+
+            return true;
+
+        } finally {
+            db.endTransaction();
+        }
+    }
+
     public void cerrar() {
         helper.close();
     }

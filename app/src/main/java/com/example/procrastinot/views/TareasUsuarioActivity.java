@@ -1,5 +1,6 @@
 package com.example.procrastinot.views;
 
+import android.content.Intent;
 import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
 import android.widget.Toast;
@@ -16,6 +17,7 @@ import com.example.procrastinot.R;
 import com.example.procrastinot.adapters.ListaTareaAdapter;
 import com.example.procrastinot.models.Tarea;
 import com.example.procrastinot.repositories.TareaRepository;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -52,12 +54,28 @@ public class TareasUsuarioActivity extends AppCompatActivity {
 
                     @Override
                     public void editar(Tarea tarea) {
-                        Toast.makeText(TareasUsuarioActivity.this, "Editar: " + tarea.getNombre(), Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(
+                                TareasUsuarioActivity.this,
+                                EditarTareaActivity.class
+                        );
+
+                        intent.putExtra("usuario_id", usuarioId);
+                        intent.putExtra("tarea_id", tarea.getId());
+
+                        startActivity(intent);
                     }
 
                     @Override
                     public void eliminar(Tarea tarea) {
-                        Toast.makeText(TareasUsuarioActivity.this, "Eliminar: " + tarea.getNombre(), Toast.LENGTH_SHORT).show();
+                        new MaterialAlertDialogBuilder(TareasUsuarioActivity.this)
+                                .setTitle("Eliminar tarea")
+                                .setMessage("¿Quieres eliminar \"" + tarea.getNombre() + "\"?" + "\nSu historial se conservará."
+                                )
+                                .setNegativeButton("Cancelar", null)
+                                .setPositiveButton("Eliminar", (dialog, which) -> {
+                                    eliminarTarea(tarea.getId());
+                                })
+                                .show();
                     }
 
                     @Override
@@ -67,6 +85,7 @@ public class TareasUsuarioActivity extends AppCompatActivity {
                     }
                 }
         );
+
 
         rvTareas.setAdapter(adapter);
 
@@ -113,7 +132,7 @@ public class TareasUsuarioActivity extends AppCompatActivity {
                     adapter.actualizarLista(tareas);
 
                     if (tareas.isEmpty()) {
-                        Toast.makeText(TareasUsuarioActivity.this, "Todavía no tienes tareas creadas", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(TareasUsuarioActivity.this, "Todavia no tienes tareas creadas", Toast.LENGTH_SHORT).show();
                     }
                 });
 
@@ -122,8 +141,40 @@ public class TareasUsuarioActivity extends AppCompatActivity {
                     if (isFinishing() || isDestroyed()) {
                         return;
                     }
-
                     Toast.makeText(TareasUsuarioActivity.this, "No se pudieron cargar las tareas", Toast.LENGTH_LONG).show();
+                });
+
+            } finally {
+                repository.cerrar();
+            }
+        });
+    }
+
+    private void eliminarTarea(long tareaId) {
+        executor.execute(() -> {
+            TareaRepository repository = new TareaRepository(getApplicationContext());
+
+            try {
+                boolean eliminada = repository.eliminarTarea(
+                        tareaId,
+                        usuarioId
+                );
+
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+                    Toast.makeText(TareasUsuarioActivity.this, eliminada ? "Tarea eliminada" : "No se pudo eliminar la tarea", Toast.LENGTH_SHORT).show();
+
+                    cargarTareas();
+                });
+
+            } catch (SQLiteException e) {
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed()) {
+                        return;
+                    }
+                    Toast.makeText(TareasUsuarioActivity.this, "Error al eliminar la tarea", Toast.LENGTH_LONG).show();
                 });
 
             } finally {

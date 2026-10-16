@@ -69,6 +69,21 @@ public class LoginActivity extends AppCompatActivity {
                 UsuarioRepository repository = new UsuarioRepository(getApplicationContext());
 
                 try {
+                    if (!repository.existeCorreo(correo)) {
+                        runOnUiThread(() -> {
+                            if (isFinishing() || isDestroyed()) {
+                                return;
+                            }
+
+                            btnLogin.setEnabled(true);
+
+                            edtEmail.setError("No existe una cuenta con este correo");
+                            edtEmail.requestFocus();
+                        });
+
+                        return;
+                    }
+
                     Usuario usuario = repository.iniciarSesion(
                             correo,
                             contrasena
@@ -82,7 +97,8 @@ public class LoginActivity extends AppCompatActivity {
                         btnLogin.setEnabled(true);
 
                         if (usuario == null) {
-                            Toast.makeText(LoginActivity.this, "Correo o contraseña incorrectos", Toast.LENGTH_SHORT).show();
+                            edtPassword.setError("Contraseña incorrecta");
+                            edtPassword.requestFocus();
                             return;
                         }
 
@@ -91,13 +107,14 @@ public class LoginActivity extends AppCompatActivity {
                                 PrincipalActivity.class
                         );
 
-                        //Envio de nombre y Id a pantalla princiapal
+                        // Envio de nombre e ID a la pantalla principal
                         intent.putExtra("usuario_id", usuario.getId());
                         intent.putExtra("usuario_nombre", usuario.getNombre());
 
                         intent.addFlags(
                                 Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK
                         );
+
                         startActivity(intent);
                     });
 

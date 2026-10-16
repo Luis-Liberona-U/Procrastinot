@@ -71,10 +71,10 @@ public class CrearTareaActivity extends AppCompatActivity {
             return;
         }
 
-        edtNombreTarea = findViewById(R.id.edtNombreTarea);
-        edtDescripcionTarea = findViewById(R.id.edtDescripcionTarea);
-        edtDuracion = findViewById(R.id.edtDuracion);
-        btnGuardarTarea = findViewById(R.id.btnGuardarTarea);
+        edtNombreTarea = findViewById(R.id.edtNombreTareaEditar);
+        edtDescripcionTarea = findViewById(R.id.edtDescripcionTareaEditar);
+        edtDuracion = findViewById(R.id.edtDuracionEditar);
+        btnGuardarTarea = findViewById(R.id.btnGuardarTareaEditar);
 
         btnGuardarTarea.setOnClickListener(v -> guardarTarea());
 
@@ -96,7 +96,7 @@ public class CrearTareaActivity extends AppCompatActivity {
         );
 
         // SELECTOR DE HORA
-        Button btnHoraInicio = findViewById(R.id.btnHoraInicio);
+        Button btnHoraInicio = findViewById(R.id.btnHoraInicioEditar);
 
         btnHoraInicio.setOnClickListener(v -> {
             MaterialTimePicker reloj = new MaterialTimePicker.Builder()
@@ -128,7 +128,7 @@ public class CrearTareaActivity extends AppCompatActivity {
         });
 
         // REPETICIÓN
-        RadioGroup rgRepeticion = findViewById(R.id.rgRepeticion);
+        RadioGroup rgRepeticion = findViewById(R.id.rgRepeticionEditar);
         RadioButton rbPersonalizar = findViewById(R.id.rbElegirDias);
 
         rgRepeticion.check(R.id.rbUnaVez);
@@ -255,7 +255,7 @@ public class CrearTareaActivity extends AppCompatActivity {
             return;
         }
 
-        RadioGroup grupo = findViewById(R.id.rgRepeticion);
+        RadioGroup grupo = findViewById(R.id.rgRepeticionEditar);
         int opcion = grupo.getCheckedRadioButtonId();
 
         String repeticion;
