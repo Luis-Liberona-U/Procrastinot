@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#DFF3FF"
     tools:context=".views.PrincipalActivity">
 
     <ScrollView
         android:id="@+id/scrollPrincipal"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0">
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:id="@+id/layoutContenido"
@@ -28,7 +29,8 @@
             <LinearLayout
                 android:id="@+id/layoutEncabezado"
                 android:layout_width="match_parent"
-                android:layout_height="85dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -37,25 +39,31 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:layout_marginEnd="12dp"
                     android:text="Bienvenido: Usuario"
-                    android:textSize="24sp"
+                    android:textColor="#172033"
+                    android:textSize="26sp"
                     android:textStyle="bold" />
 
                 <ImageButton
                     android:id="@+id/btnPerfil"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:contentDescription="Abrir Perfil"
-                    app:srcCompat="@android:drawable/ic_dialog_info" />
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Abrir perfil"
+                    android:padding="12dp"
+                    app:srcCompat="@android:drawable/ic_dialog_info"
+                    app:tint="#2563EB" />
+
             </LinearLayout>
 
             <TextView
                 android:id="@+id/txtTituloResumen"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="28dp"
                 android:text="Resumen de hoy"
+                android:textColor="#172033"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -64,39 +72,59 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:orientation="horizontal">
+                android:background="#FFFFFF"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:padding="8dp">
 
                 <TextView
                     android:id="@+id/txtRacha"
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:minHeight="80dp"
                     android:gravity="center"
-                    android:text="Racha" />
+                    android:padding="4dp"
+                    android:text="Racha"
+                    android:textColor="#1D4ED8"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/txtPendientes"
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:minHeight="80dp"
                     android:gravity="center"
-                    android:text="Pendientes" />
+                    android:padding="4dp"
+                    android:text="Pendientes"
+                    android:textColor="#334155"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/txtCompletadas"
                     android:layout_width="0dp"
-                    android:layout_height="80dp"
+                    android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:minHeight="80dp"
                     android:gravity="center"
-                    android:text="Completadas" />
+                    android:padding="4dp"
+                    android:text="Completadas"
+                    android:textColor="#15803D"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
             </LinearLayout>
 
             <TextView
                 android:id="@+id/txtTituloProximaTarea"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:text="Proxima tarea"
+                android:layout_marginTop="28dp"
+                android:text="Próxima tarea"
+                android:textColor="#172033"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -104,47 +132,70 @@
                 android:id="@+id/layoutProximaTarea"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="12dp"
+                android:layout_marginTop="12dp"
+                android:background="#FFFFFF"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <TextView
                     android:id="@+id/txtProximaTarea"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="No tienes tareas proximas"
-                    android:textSize="18sp"
+                    android:text="No tienes tareas próximas"
+                    android:textColor="#172033"
+                    android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/txtHoraTarea"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Agrega una nueva tarea para comenzar" />
+                    android:layout_marginTop="10dp"
+                    android:text="Agrega una nueva tarea para comenzar"
+                    android:textColor="#52657A"
+                    android:textSize="16sp" />
 
                 <Button
                     android:id="@+id/btnComenzarTarea"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="20dp"
                     android:enabled="false"
-                    android:text="Comenzar Tarea" />
+                    android:minHeight="56dp"
+                    android:text="Comenzar tarea"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:backgroundTint="@color/black" />
+
             </LinearLayout>
 
             <Button
                 android:id="@+id/btnCrearTarea"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:text="Crear una tarea" />
+                android:layout_marginTop="28dp"
+                android:minHeight="56dp"
+                android:text="Crear una tarea"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:backgroundTint="#2563EB" />
 
             <Button
                 android:id="@+id/btnVerTareas"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Ver tareas activas" />
+                android:minHeight="56dp"
+                android:text="Mis tareas"
+                android:textAllCaps="false"
+                android:textColor="#1D4ED8"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:backgroundTint="#FFFFFF" />
 
             <Button
                 android:id="@+id/btnHistorial"
@@ -152,8 +203,16 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:layout_marginBottom="24dp"
-                android:text="Historial" />
+                android:minHeight="56dp"
+                android:text="Historial"
+                android:textAllCaps="false"
+                android:textColor="#1D4ED8"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:backgroundTint="#FFFFFF" />
+
         </LinearLayout>
+
     </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
