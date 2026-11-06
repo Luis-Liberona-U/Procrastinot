@@ -1,29 +1,100 @@
 package com.example.procrastinot.models;
 
+
+/**
+ * Representa una realización de una tarea.
+ *
+ * Una misma tarea puede tener varios registros correspondientes a distintos inicios programados.
+ *
+ * Contiene los tiempos, el estado y las rutas de las fotografías.
+ * Esta clase no ejecuta consultas SQL, controla el cronómetro ni válida las transiciones entre estados.
+ *
+ * Los tiempos se expresan en milisegundos desde la época Unix.
+ */
+
 public class RegistroTarea {
+
+    /** Estado que representa una realización pendiente de inicio. */
     public static final String PENDIENTE = "PENDIENTE";
+
+    /**
+     * Estado de una realización iniciada.
+     * En el flujo actual se mantiene hasta confirmar la fotografía final, aunque ya se haya registrado el fin real.
+     */
     public static final String EN_CURSO = "EN_CURSO";
+
+    /** Estado asignado al confirmar y guardar el resultado final. */
     public static final String COMPLETADA = "COMPLETADA";
+
+    /** Estado disponible para representar una realización omitida. */
     public static final String OMITIDA = "OMITIDA";
 
+    /** Identificador Id de la realización en registro en SQLite. */
     private long id;
+
+    /** Identificador de la tarea a la que pertenece esta realización. */
     private long tareaId;
 
+    /** Instante previsto para comenzar la tarea, en milisegundos. */
     private long inicioProgramado;
+
+    /**
+     * Instante efectivo de inicio, en milisegundos.
+     * Utiliza Long para permitir null cuando no se ha registrado.
+     */
     private Long inicioReal;
+
+    /**
+     * Instante efectivo de finalización, en milisegundos.
+     * Utiliza Long para permitir null cuando no se ha registrado.
+     */
     private Long finReal;
 
+    /** Estado de la realización. */
     private String estado;
+
+    /** Ruta del archivo de la fotografía inicial. */
     private String fotoAntes;
+
+    /** Ruta del archivo de la fotografía final. */
     private String fotoDespues;
 
+
+    /**
+     * Nombre de la tarea utilizado para mostrar el historial.
+     *
+     * Se obtiene al consultar la tabla tareas mediante un JOIN.
+     * No corresponde a una columna de registro_tarea.
+     */
     // Atributo usado para el Historial
     private String nombreTarea;
 
+
+    /**
+     * Crea un registro con estado PENDIENTE.
+     *
+     * Los tiempos reales y las rutas permanecen en null hasta que se asignen.
+     * Los identificadores y el inicio programado conservan inicialmente el valor 0.
+     */
     public RegistroTarea() {
         estado = PENDIENTE;
     }
 
+
+    /**
+     * Crea un registro con los datos recibidos, sin validarlos.
+     *
+     * El nombre de la tarea puede asignarse posteriormente mediante setNombreTarea().
+     *
+     * @param id Identificador del registro en SQLite.
+     * @param tareaId Identificador de la tarea asociada.
+     * @param inicioProgramado Inicio previsto en milisegundos desde la época Unix.
+     * @param inicioReal Inicio efectivo en milisegundos, o null si no está registrado.
+     * @param finReal Final efectivo en milisegundos, o null si no está registrado.
+     * @param estado Estado de la realización.
+     * @param fotoAntes Ruta de la fotografía inicial, o null si no está asignada.
+     * @param fotoDespues Ruta de la fotografía final, o null si no está asignada.
+     */
     public RegistroTarea(long id,
             long tareaId,
             long inicioProgramado,
@@ -107,7 +178,7 @@ public class RegistroTarea {
         this.fotoDespues = fotoDespues;
     }
 
-    // Metodos para el historial
+    // Acceso al nombre obtenido para presentar el historial.
     public String getNombreTarea() {return nombreTarea;}
 
 

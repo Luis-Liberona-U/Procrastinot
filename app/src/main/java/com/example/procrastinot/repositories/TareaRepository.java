@@ -13,14 +13,42 @@ import com.example.procrastinot.models.Tarea;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Gestiona la configuración de las tareas y sus días de repetición en SQLite.
+ *
+ * Esta clase permite crear, consultar, modificar, activar, desactivar y eliminar las tareas de un usuario.
+ *
+ * Las realizaciones y sus fotografías se administran por separado mediante RegistroTareaRepository.
+ */
 public class TareaRepository {
-
     private final ProcrastinotDbHelper helper;
 
     public TareaRepository(Context context) {
         helper = new ProcrastinotDbHelper(context);
     }
 
+
+
+    /**
+     * Crea una tarea activa y no eliminada, junto con sus días semanales.
+     *
+     * La validación de días se aplica únicamente a DIAS_SEMANA.
+     * Las demás restricciones se comprueban mediante el esquema de SQLite.
+     *
+     * @param usuarioId ID del usuario propietario de la tarea.
+     * @param nombre Nombre de la tarea.
+     * @param descripcion Descripción opcional.
+     * @param hora Hora de inicio, entre 0 y 23.
+     * @param minuto Minuto de inicio, entre 0 y 59.
+     * @param repeticion Tipo: UNA_VEZ, DIARIA o DIAS_SEMANA.
+     * @param fechaUnica Fecha yyyy-MM-dd, obligatoria para UNA_VEZ.
+     * @param duracionMinutos Duración estimada, mayor que cero.
+     * @param dias Siete posiciones de lunes a domingo; true indica selección. Este se ignora cuando la repetición no es semanal.
+     * @return ID asignado a la tarea creada.
+     * @throws IllegalArgumentException Si la repetición es semanal y los días no tienen siete posiciones o no hay ninguno seleccionado.
+     * @throws android.database.sqlite.SQLiteException
+     *         Sí falla el acceso a SQLite o alguna inserción.
+     */
     public long crearTarea(
             long usuarioId,
             String nombre,
@@ -101,6 +129,16 @@ public class TareaRepository {
         }
     }
 
+    /**
+     * Consulta las tareas no eliminadas de un usuario.
+     *
+     * Incluye tareas activas y desactivadas. Las ordena por hora, minuto e ID, de menor a mayor, y carga sus días si son semanales.
+     *
+     * @param usuarioId ID del usuario propietario.
+     * @return Lista de tareas encontradas, o una lista vacía si no hay ninguna.
+     * @throws android.database.sqlite.SQLiteException
+     *         Si falla el acceso o la consulta a SQLite.
+     */
     public List<Tarea> listarPorUsuario(long usuarioId) {
         SQLiteDatabase db = helper.getReadableDatabase();
 
@@ -117,6 +155,7 @@ public class TareaRepository {
                 + Tareas.COLUMN_MINUTO_INICIO + " ASC, "
                 + Tareas._ID + " ASC";
 
+        // El Cursor se cierra automáticamente al salir del bloque.
         try (Cursor cursor = db.query(
                 Tareas.TABLE_NAME,
                 null,
@@ -127,6 +166,8 @@ public class TareaRepository {
                 orden
         )) {
             while (cursor.moveToNext()) {
+
+                // Convierte cada fila de SQLite en un objeto Tarea.
                 Tarea tarea = new Tarea();
 
                 tarea.setId(cursor.getLong(
@@ -206,6 +247,18 @@ public class TareaRepository {
         return tareas;
     }
 
+    /**
+     * Activa o desactiva una tarea no eliminada del usuario.
+     *
+     * Modifica únicamente el campo activa, conservando la configuración de la tarea y sus registros de realización o historial.
+     *
+     * @param tareaId ID de la tarea que se modificará.
+     * @param usuarioId ID del usuario propietario.
+     * @param activa true para activar; false para desactivar.
+     * @return true si SQLite actualizó una fila y false si no encontró una tarea que cumpliera el filtro.
+     * @throws android.database.sqlite.SQLiteException
+     *         Sí falla el acceso o la actualización en SQLite.
+     */
     public boolean cambiarEstado(
             long tareaId,
             long usuarioId,
@@ -235,6 +288,17 @@ public class TareaRepository {
         return filas == 1;
     }
 
+    /**
+     * Elimina lógicamente una tarea del usuario indicado.
+     *
+     * Marca eliminada como 1 y activa como 0. Conserva la fila, sus días de repetición y los registros históricos asociados.
+     *
+     * @param tareaId ID de la tarea que se eliminará lógicamente.
+     * @param usuarioId ID del usuario propietario.
+     * @return true si se actualizó una fila y false si la tarea no existe, pertenece a otro usuario o ya estaba eliminada.
+     * @throws android.database.sqlite.SQLiteException
+     *         Sí falla el acceso o la actualización en SQLite.
+     */
     public boolean eliminarTarea(
             long tareaId,
             long usuarioId
@@ -264,6 +328,15 @@ public class TareaRepository {
         return filas == 1;
     }
 
+    /**
+     * Recupera los días semanales asociados a una tarea.
+     *
+     * @param db Conexión abierta utilizada para realizar la consulta.
+     * @param tareaId ID de la tarea cuyos días se consultan.
+     * @return Arreglo de siete posiciones, de lunes a domingo, con true en los días guardados y false en los demás.
+     * @throws android.database.sqlite.SQLiteException
+     *         Sí falla la consulta de los días.
+     */
     private boolean[] consultarDias(
             SQLiteDatabase db,
             long tareaId
@@ -295,6 +368,18 @@ public class TareaRepository {
         return dias;
     }
 
+    /**
+     * Consulta una tarea no eliminada por su ID y propietario.
+     *
+     * Permite recuperar tareas activas o desactivadas.
+     * Si su repetición es semanal, también captura sus días seleccionados.
+     *
+     * @param tareaId ID de la tarea que se desea recuperar.
+     * @param usuarioId ID del usuario propietario.
+     * @return Tarea encontrada, o null si no cumple el filtro.
+     * @throws android.database.sqlite.SQLiteException
+     *         Si falla el acceso o la consulta a SQLite.
+     */
     public Tarea obtenerPorId(long tareaId, long usuarioId) {
         SQLiteDatabase db = helper.getReadableDatabase();
 
@@ -365,6 +450,28 @@ public class TareaRepository {
         }
     }
 
+    /**
+     * Actualiza la configuración de una tarea y reemplaza sus días semanales.
+     *
+     * Mantiene el propietario, el estado de activación y los registros históricos. La tarea debe pertenecer al usuario y no estar eliminada.
+     *
+     * Utiliza una transacción para actualizar los datos, quitar los días anteriores y guardar los nuevos. Si falla, se revierten los cambios.
+     *
+     * @param tareaId ID de la tarea que se modificará.
+     * @param usuarioId ID del usuario propietario.
+     * @param nombre Nuevo nombre de la tarea.
+     * @param descripcion Nueva descripción opcional.
+     * @param hora Nueva hora de inicio, entre 0 y 23.
+     * @param minuto Nuevo minuto de inicio, entre 0 y 59.
+     * @param repeticion Tipo: UNA_VEZ, DIARIA o DIAS_SEMANA.
+     * @param fechaUnica Fecha yyyy-MM-dd, obligatoria para UNA_VEZ.
+     * @param duracionMinutos Duración estimada, mayor que cero.
+     * @param dias Siete posiciones de lunes a domingo; true indica selección. Se ignora cuando la repetición no es semanal.
+     * @return true si se actualizó la tarea y su configuración de díasy false si ninguna tarea cumplió el filtro.
+     * @throws IllegalArgumentException Si la repetición es semanal y los días no tienen siete posiciones o no hay ninguno seleccionado.
+     * @throws android.database.sqlite.SQLiteException
+     *         Sí falla el acceso o alguna operación en SQLite.
+     */
     public boolean actualizarTarea(
             long tareaId,
             long usuarioId,
@@ -468,6 +575,12 @@ public class TareaRepository {
             db.endTransaction();
         }
     }
+
+    /**
+     * Cierra el Helper y libera la conexión que administra.
+     *
+     * Debe llamarse cuando hayan terminado las operaciones del repositorio.
+     */
 
     public void cerrar() {
         helper.close();

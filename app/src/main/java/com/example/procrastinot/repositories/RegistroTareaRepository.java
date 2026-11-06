@@ -12,14 +12,48 @@ import com.example.procrastinot.database.ProcrastinotDbHelper;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Gestiona los registros de realización de las tareas en SQLite.
+ *
+ * Permite registrar el inicio, y el final de la realización de una tarea, confirmar la fotografía final y consultar los resultados e historial.
+ *
+ * Cada registro representa una realización de una tarea y almacena tiempos y rutas de fotografías. Las fotografías se guardan localmente en el celular no en la base de datos.
+ */
+
 public class RegistroTareaRepository {
 
     private final ProcrastinotDbHelper helper;
 
+    /**
+     * Inicializa el repositorio y su administrador de base de datos.
+     *
+     * @param context Contexto utilizado para crear el Helper.
+     */
     public RegistroTareaRepository(Context context) {
         helper = new ProcrastinotDbHelper(context);
     }
 
+
+    /**
+     * Crea un registro de realización con estado EN_CURSO.
+     *
+     * Comprueba que la tarea pertenece al usuario, está activa y no está eliminada.
+     *
+     * La restricción UNIQUE de SQLite impide registrar dos veces la misma tarea con el mismo inicio programado.
+     *
+     * Este método no comprueba la existencia del archivo de fotografía.
+     *
+     * @param tareaId ID de la tarea que se realizará.
+     * @param usuarioId ID del usuario propietario de la tarea.
+     * @param inicioProgramado Inicio previsto en milisegundos desde la época Unix.
+     * @param inicioReal Inicio efectivo en milisegundos desde la época Unix.
+     * @param fotoAntes Ruta del archivo de la fotografía inicial.
+     * @return ID del registro creado.
+     * @throws IllegalArgumentException
+     *         Si la tarea no pertenece al usuario, está desactivada, está eliminada o no existe.
+     * @throws android.database.sqlite.SQLiteException
+     *         Si falla el acceso a SQLite o la inserción del registro.
+     */
     public long iniciarRegistro(
             long tareaId,
             long usuarioId,
@@ -85,6 +119,22 @@ public class RegistroTareaRepository {
             db.endTransaction();
         }
     }
+
+    /**
+     * Recupera un registro comprobando el propietario de la tarea.
+     *
+     * La consulta une registro_tarea con tareas para verificar el usuario.
+     *
+     * Permite recuperar registros aunque la tarea esté desactivada o eliminada lógicamente.
+     *
+     * Carga los datos del registro, pero no el nombre de la tarea.
+     *
+     * @param registroId ID del registro que se desea consultar.
+     * @param usuarioId ID del usuario propietario.
+     * @return Registro encontrado, o null si no existe o pertenece a otro usuario.
+     * @throws android.database.sqlite.SQLiteException
+     *         Si falla el acceso o la consulta a SQLite.
+     */
     public com.example.procrastinot.models.RegistroTarea obtenerRegistro(
             long registroId,
             long usuarioId
@@ -166,6 +216,21 @@ public class RegistroTareaRepository {
         }
     }
 
+    /**
+     * Registra el instante en que el usuario termina de realizar la tarea.
+     *
+     * Solo actualiza registros EN_CURSO del usuario que tengan inicio real, no tengan fin real y cuyo inicio no sea posterior al final recibido.
+     *
+     * Mantiene el estado EN_CURSO hasta confirmar la fotografía final.
+     * El tiempo dedicado se puede calcular restando inicioReal de finReal.
+     *
+     * @param registroId ID del registro que se modificará.
+     * @param usuarioId ID del usuario propietario.
+     * @param finReal Instante de finalización en milisegundos desde la época Unix.
+     * @return true si se actualizó una fila; false si no cumplía las condiciones.
+     * @throws android.database.sqlite.SQLiteException
+     *         Si falla el acceso o la actualización en SQLite.
+     */
     public boolean registrarFin(
             long registroId,
             long usuarioId,
@@ -200,6 +265,22 @@ public class RegistroTareaRepository {
         ) == 1;
     }
 
+    /**
+     * Guarda la ruta de la fotografía final y marca el registro como COMPLETADA.
+     *
+     * El registro debe pertenecer al usuario, estar EN_CURSO y tener un fin real guardado previamente.
+     *
+     * No modifica el fin real, por lo que el tiempo utilizado para tomar la fotografía final no se añade a la duración de la tarea.
+     *
+     * La Activity valida la fotografía antes de llamar a este método.
+     *
+     * @param registroId ID del registro que se completará.
+     * @param usuarioId ID del usuario propietario.
+     * @param fotoDespues Ruta del archivo de la fotografía final.
+     * @return true si se actualizó una fila; false si no cumplía las condiciones.
+     * @throws android.database.sqlite.SQLiteException
+     *         Si falla el acceso o la actualización en SQLite.
+     */
     public boolean completarRegistro(
             long registroId,
             long usuarioId,
@@ -236,6 +317,17 @@ public class RegistroTareaRepository {
         ) == 1;
     }
 
+    /**
+     * Consulta el nombre de una tarea del usuario indicado.
+     *
+     * Incluye tareas desactivadas o eliminadas lógicamente para permitir mostrar sus resultados históricos.
+     *
+     * @param tareaId ID de la tarea que se desea consultar.
+     * @param usuarioId ID del usuario propietario.
+     * @return Nombre de la tarea, o "Resultado de la tarea" si no se encuentra.
+     * @throws android.database.sqlite.SQLiteException
+     *         Si falla el acceso o la consulta a SQLite.
+     */
     public String obtenerNombreTarea(long tareaId, long usuarioId) {
         SQLiteDatabase db = helper.getReadableDatabase();
 
@@ -264,6 +356,22 @@ public class RegistroTareaRepository {
         }
     }
 
+    /**
+     * Consulta el historial de realizaciones de tareas completadas de un usuario.
+     *
+     * Incluye únicamente registros COMPLETADA con inicio y fin reales.
+     * Los ordena por finalización e ID, del más reciente al más antiguo.
+     * Conserva las realizaciones de tareas eliminadas lógicamente.
+     *
+     * Devuelve los datos necesarios para la lista: ID del registro,
+     * ID y nombre actual de la tarea, inicio, fin y estado.
+     * Para obtener detalle completo se obtiene mediante obtenerRegistro().
+     *
+     * @param usuarioId ID del usuario cuyo historial se consultará.
+     * @return Lista de registros resumidos, o una lista vacía si no hay resultados.
+     * @throws android.database.sqlite.SQLiteException
+     *         Si falla el acceso o la consulta a SQLite.
+     */
     public List<com.example.procrastinot.models.RegistroTarea>
     listarHistorial(long usuarioId) {
 
@@ -329,6 +437,11 @@ public class RegistroTareaRepository {
         return registros;
     }
 
+    /**
+     * Cierra el Helper y libera la conexión que administra.
+     *
+     * Debe llamarse cuando hayan terminado las operaciones del repositorio.
+     */
     public void cerrar() {
         helper.close();
     }
