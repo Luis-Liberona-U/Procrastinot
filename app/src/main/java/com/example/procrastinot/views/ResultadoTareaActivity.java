@@ -24,6 +24,14 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+
+
+/**
+ * Muestra el resultado de una realización completada.
+ *
+ * Presenta el nombre de la tarea, el tiempo empleado y las fotografías de antes y después. Consulta los datos en SQLite y carga las imágenes
+ * desde las rutas guardadas en el registro.
+ */
 public class ResultadoTareaActivity extends AppCompatActivity {
 
     private long usuarioId;
@@ -34,8 +42,17 @@ public class ResultadoTareaActivity extends AppCompatActivity {
     private ImageView imgAntes;
     private ImageView imgDespues;
 
+    /** Ejecuta la consulta y la carga de imágenes fuera del hilo principal. */
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
+
+    /**
+     * Obtiene los identificadores del usuario y del registro, prepara la pantalla y solicita la carga del resultado.
+     *
+     * Si falta alguno de los identificadores, muestra "No se recibieron los datos del resultado" y cierra la pantalla.
+     *
+     * @param savedInstanceState Estado guardado por Android al recrear la pantalla, o null si no existe.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,6 +115,14 @@ public class ResultadoTareaActivity extends AppCompatActivity {
         cargarResultado();
     }
 
+    /**
+     * Consulta el registro del usuario y carga sus fotografías en segundo plano.
+     *
+     * El registro debe estar completado y tener inicio y fin reales. Si no cumple esas condiciones, muestra "No se encontró un resultado completado"
+     * y cierra la pantalla. Si la consulta a SQLite falla, muestra "No se pudo cargar el resultado" y también la cierra.
+     *
+     * Si alguna fotografía no se puede cargar, muestra el nombre, el tiempo y las imágenes que estén disponibles, junto con un aviso.
+     */
     private void cargarResultado() {
         executor.execute(() -> {
             RegistroTareaRepository repository = new RegistroTareaRepository(getApplicationContext());
@@ -161,6 +186,15 @@ public class ResultadoTareaActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Carga una fotografía a partir de su ruta local.
+     *
+     * Primero lee las dimensiones sin cargar los píxeles. Luego aumenta el factor de muestreo hasta que las dimensiones estimadas no
+     * superen 1200 píxeles, para reducir el uso de memoria.
+     *
+     * @param ruta Ruta del archivo de la fotografía.
+     * @return Imagen decodificada o null si la ruta está vacía, no se indicó o el archivo no se pudo decodificar.
+     */
     private Bitmap cargarFoto(String ruta) {
         if (ruta == null || ruta.isEmpty()) {
             return null;
@@ -187,6 +221,12 @@ public class ResultadoTareaActivity extends AppCompatActivity {
         return BitmapFactory.decodeFile(ruta, opciones);
     }
 
+
+    /**
+     * Muestra un aviso y cierra la pantalla desde el hilo principal.
+     *
+     * @param mensaje Texto que explica por qué no se pudo mostrar el resultado.
+     */
     private void mostrarError(String mensaje) {
         runOnUiThread(() -> {
             if (isFinishing() || isDestroyed()) {
@@ -198,6 +238,11 @@ public class ResultadoTareaActivity extends AppCompatActivity {
         });
     }
 
+
+    /**
+     * Deja de aceptar nuevas operaciones cuando se destruye la pantalla.
+     * Las operaciones ya enviadas al ejecutor pueden terminar.
+     */
     @Override
     protected void onDestroy() {
         executor.shutdown();

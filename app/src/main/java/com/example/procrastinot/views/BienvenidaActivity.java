@@ -12,8 +12,18 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.procrastinot.R;
 
+/**
+ * Muestra la pantalla inicial de Procrastinot.
+ *
+ * El botón Comenzar abre LoginActivity donde el usuario puede ingresar sus credenciales.
+ */
 public class BienvenidaActivity extends AppCompatActivity {
 
+    /**
+     * Carga el diseño de bienvenida, ajusta el espacio para las barras del sistema y configura el botón que abre el inicio de sesión.
+     *
+     * @param savedInstanceState Estado guardado por Android al recrear la pantalla, o null si no existe.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

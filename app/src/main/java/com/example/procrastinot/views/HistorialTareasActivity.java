@@ -22,14 +22,29 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Muestra las realizaciones completadas del usuario.
+ *
+ * Al tocar una fila, abre ResultadoTareaActivity con el ID del usuario y el ID del registro seleccionado.
+ */
+
 public class HistorialTareasActivity extends AppCompatActivity {
 
     private long usuarioId = -1;
     private HistorialTareasAdapter adapter;
 
+    /** Ejecuta las consultas a SQLite fuera del hilo principal. */
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor();
 
+
+    /**
+     * Carga el diseño, obtiene el ID del usuario y configura la lista.
+     *
+     * Si no se recibe el ID de usuario, muestra un mensaje de error y cierra la pantalla.
+     *
+     * @param savedInstanceState Estado guardado por Android al recrear la pantalla, o null si no existe.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,6 +98,9 @@ public class HistorialTareasActivity extends AppCompatActivity {
         );
     }
 
+    /**
+     * Carga el historial al entrar o volver a la pantalla, siempre que se haya recibido el ID del usuario y el adaptador esté inicializado.
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -92,6 +110,12 @@ public class HistorialTareasActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Consulta las realizaciones completadas en segundo plano y entrega los resultados al adaptador desde el hilo principal.
+     *
+     * Si la consulta devuelve una lista vacía, muestra "Todavía no tienes tareas completadas". Si se produce una SQLiteException, la captura y muestra
+     * "No se pudo cargar el historial".
+     */
     private void cargarHistorial() {
         executor.execute(() -> {
             RegistroTareaRepository repository = new RegistroTareaRepository(getApplicationContext());
@@ -125,6 +149,10 @@ public class HistorialTareasActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Deja de aceptar nuevas consultas al destruirse la pantalla.
+     * Las consultas ya enviadas al ejecutor pueden terminar.
+     */
     @Override
     protected void onDestroy() {
         executor.shutdown();

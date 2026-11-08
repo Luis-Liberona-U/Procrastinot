@@ -23,14 +23,28 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Muestra las tareas no eliminadas del usuario en la pantalla Mis tareas.
+ *
+ * Permite abrir el formulario de edición y solicitar la eliminación lógica de una tarea. La eliminación lógica la quita de la lista sin borrar sus registros del historial.
+ */
 public class TareasUsuarioActivity extends AppCompatActivity {
 
     private long usuarioId = -1;
     private ListaTareaAdapter adapter;
 
+    /** Ejecuta las consultas y actualizaciones de SQLite fuera del hilo principal. */
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor();
 
+
+    /**
+     * Carga el diseño, configura la lista y conecta las acciones de cada fila.
+     *
+     * Si no se recibe el ID del usuario, muestra "No se recibió el usuario. Inicia sesión nuevamente." y cierra la pantalla.
+     *
+     * @param savedInstanceState Estado guardado por Android al recrear la pantalla, o null si no existe.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,6 +122,9 @@ public class TareasUsuarioActivity extends AppCompatActivity {
         );
     }
 
+    /**
+     * Recarga las tareas al entrar o volver a la pantalla.
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -117,6 +134,12 @@ public class TareasUsuarioActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Consulta en segundo plano las tareas no eliminadas del usuario y actualiza la lista desde el hilo principal.
+     *
+     * Si no hay tareas, muestra "Todavia no tienes tareas creadas".
+     * Si la consulta falla con una SQLiteException, muestra "No se pudieron cargar las tareas".
+     */
     private void cargarTareas() {
         executor.execute(() -> {
             TareaRepository repository = new TareaRepository(getApplicationContext());
@@ -150,6 +173,14 @@ public class TareasUsuarioActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Solicita la eliminación lógica de una tarea del usuario actual.
+     *
+     * Si se devuelve un resultado, muestra "Tarea eliminada" o "No se pudo eliminar la tarea" y recarga la lista.
+     * Si SQLite lanza una excepción, muestra "Error al eliminar la tarea".
+     *
+     * @param tareaId Identificador de la tarea seleccionada.
+     */
     private void eliminarTarea(long tareaId) {
         executor.execute(() -> {
             TareaRepository repository = new TareaRepository(getApplicationContext());
@@ -183,6 +214,10 @@ public class TareasUsuarioActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Deja de aceptar nuevas operaciones al destruirse la pantalla.
+     * Las operaciones ya enviadas al ejecutor pueden terminar.
+     */
     @Override
     protected void onDestroy() {
         executor.shutdown();

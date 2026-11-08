@@ -18,25 +18,60 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+
+/**
+ * Esta clase se encarga de mostrar las tareas del usuario en un RecyclerView.
+ *
+ * Cada fila presenta el nombre, la hora, la repetición y el estado de la tarea.
+ * Las acciones de editar, eliminar y activar o desactivar se comunican a la pantalla mediante "AccionesTarea".
+ */
 public class ListaTareaAdapter extends RecyclerView.Adapter<ListaTareaAdapter.TareaViewHolder> {
 
     //Lista de tareas
     private final List<Tarea> tareas = new ArrayList<>();
 
+    /** Recibe las acciones que el usuario realiza sobre una fila. */
     private final AccionesTarea acciones;
 
     public interface AccionesTarea {
 
+        /**
+         * Solicita editar la tarea seleccionada.
+         *
+         * @param tarea Tarea que se desea editar.
+         */
         void editar(Tarea tarea);
+
+        /**
+         * Solicita eliminar la tarea seleccionada.
+         *
+         * @param tarea Tarea que se desea eliminar.
+         */
         void eliminar(Tarea tarea);
+
+        /**
+         * Comunica el nuevo estado elegido con el interruptor.
+         *
+         * @param tarea Tarea cuyo estado se desea cambiar.
+         * @param activa {@code true} para activar; {@code false} para desactivar.
+         */
         void cambiarActiva(Tarea tarea, boolean activa);
     }
 
+    /**
+     * Crea el adaptador con las acciones que se harán en la pantalla.
+     *
+     * @param acciones Implementación que recibe las acciones de cada fila.
+     */
     public ListaTareaAdapter(AccionesTarea acciones) {
         this.acciones = acciones;
     }
 
-    // Remplaza la lista mostrada
+    /**
+     * Reemplaza las tareas mostradas y solicita al RecyclerView que actualice sus filas. Debe llamarse desde el hilo principal.
+     *
+     * @param nuevaLista Lista no nula de tareas, en el orden en que se mostrarán.
+     */
     public void actualizarLista(List<Tarea> nuevaLista) {
         tareas.clear();
         tareas.addAll(nuevaLista);
@@ -44,7 +79,13 @@ public class ListaTareaAdapter extends RecyclerView.Adapter<ListaTareaAdapter.Ta
         notifyDataSetChanged();
     }
 
-    // Crea las filas
+    /**
+     * Crea una fila a partir del diseño de item_tarea.xml.
+     *
+     * @param parent Contenedor al que se incorporará la fila.
+     * @param viewType Tipo de vista solicitado; se utiliza un único diseño.
+     * @return ViewHolder con las referencias a los componentes de la fila.
+     */
     @NonNull
     @Override
     public TareaViewHolder onCreateViewHolder(
@@ -57,7 +98,12 @@ public class ListaTareaAdapter extends RecyclerView.Adapter<ListaTareaAdapter.Ta
         return new TareaViewHolder(fila);
     }
 
-    //Rellena con los daton las filasa
+    /**
+     * Muestra los datos de una tarea y conecta las acciones de su fila.
+     *
+     * @param holder ViewHolder de la fila que se actualizará.
+     * @param position Posición de la tarea en la lista.
+     */
     @Override
     public void onBindViewHolder(
             @NonNull TareaViewHolder holder,
@@ -96,13 +142,25 @@ public class ListaTareaAdapter extends RecyclerView.Adapter<ListaTareaAdapter.Ta
         });
     }
 
-    // Devuelve la cantidad de elementos
+    /**
+     * Indica cuántas filas debe mostrar el RecyclerView.
+     *
+     * @return Cantidad de tareas en la lista.
+     */
     @Override
     public int getItemCount() {
         return tareas.size();
     }
 
-    // Convierte la repeticion en un texto
+    /**
+     * Convierte la repetición en el texto de la fila.
+     *
+     * Para una tarea de una sola vez muestra su fecha si está disponible.
+     * Para una tarea semanal abrevia los días seleccionados.
+     *
+     * @param tarea Tarea cuya repetición se desea mostrar.
+     * @return Texto de repetición para la fila.
+     */
     private String textoRepeticion(Tarea tarea) {
         String repeticion = tarea.getRepeticion();
 
@@ -152,6 +210,11 @@ public class ListaTareaAdapter extends RecyclerView.Adapter<ListaTareaAdapter.Ta
         return "Sin repetición";
     }
 
+    /**
+     * Localiza los textos y controles definidos en la fila.
+     *
+     * @param "itemView" Vista raíz de item_tarea.xml.
+     */
     static class TareaViewHolder extends RecyclerView.ViewHolder {
 
         final TextView nombre;

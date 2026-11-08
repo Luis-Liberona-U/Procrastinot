@@ -28,6 +28,11 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Permite editar una tarea existente del usuario.
+ *
+ * Carga los datos guardados en SQLite, completa el formulario y solicita la actualización a TareaRepository.
+ */
 public class EditarTareaActivity extends AppCompatActivity {
 
     private long usuarioId;
@@ -36,6 +41,7 @@ public class EditarTareaActivity extends AppCompatActivity {
     private int horaInicio = -1;
     private int minutoInicio = -1;
 
+    /** Datos guardados antes de editar, usados para comparar la programación. */
     private Tarea tareaOriginal;
     private boolean cargando = true;
     private boolean guardando = false;
@@ -50,6 +56,7 @@ public class EditarTareaActivity extends AppCompatActivity {
     private RadioGroup rgRepeticion;
     private RadioButton rbPersonalizar;
 
+    /** Ejecuta la lectura y la escritura de SQLite fuera del hilo principal. */
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor();
 
@@ -58,10 +65,19 @@ public class EditarTareaActivity extends AppCompatActivity {
             "Viernes", "Sábado", "Domingo"
     };
 
+    /** Días confirmados para la repetición, de lunes a domingo. */
     private boolean[] diasSeleccionados = new boolean[7];
     private int repeticionAnterior = R.id.rbUnaVez;
     private boolean selectorDiasAbierto = false;
 
+    /**
+     * Prepara el formulario y solicita la carga de la tarea.
+     *
+     * Recibe el ID del usuario de de la tarea mediante el Intent.
+     * Si falta alguno, muestra "No se recibieron los datos de la tarea" y cierra la pantalla.
+     *
+     * @param savedInstanceState Estado guardado por Android al recrear la pantalla, o null si no existe.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -135,6 +151,12 @@ public class EditarTareaActivity extends AppCompatActivity {
         cargarTarea();
     }
 
+    /**
+     * Consulta la tarea por su ID y usuario en segundo plano.
+     *
+     * Si la encuentra, completa y habilita el formulario en el hilo principal.
+     * Si la tarea no está disponible o falla la consulta a SQLite, muestra el aviso correspondiente y cierra la pantalla.
+     */
     private void cargarTarea() {
         executor.execute(() -> {
             TareaRepository repository =
@@ -210,12 +232,22 @@ public class EditarTareaActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Identifica la selección exacta de lunes a viernes.
+     *
+     * @param dias Arreglo de siete posiciones ordenadas de lunes a domingo.
+     * @return true si los cinco días hábiles están marcados y sábado y domingo están desmarcados.
+     */
     private boolean esLunesAViernes(boolean[] dias) {
         return dias[0] && dias[1] && dias[2]
                 && dias[3] && dias[4]
                 && !dias[5] && !dias[6];
     }
 
+    /**
+     * Abre el reloj de 24 horas con la selección actual.
+     * Actualiza la hora del formulario solo al confirmar.
+     */
     private void mostrarReloj() {
         MaterialTimePicker reloj = new MaterialTimePicker.Builder()
                 .setTitleText("Hora de inicio")
@@ -234,6 +266,7 @@ public class EditarTareaActivity extends AppCompatActivity {
         reloj.show(getSupportFragmentManager(), "RELOJ_EDITAR");
     }
 
+    /** Muestra la hora y el minuto seleccionados en el botón del reloj. */
     private void actualizarTextoHora() {
         btnHoraInicio.setText(
                 String.format(
@@ -245,6 +278,12 @@ public class EditarTareaActivity extends AppCompatActivity {
         );
     }
 
+    /**
+     * Permite modificar los días de la repetición personalizada.
+     *
+     * Trabaja con una copia de la selección confirmada. Al cancelar, conserva los días guardados en el formulario y restaura la opción de repetición anterior.
+     * Si se intenta aceptar sin seleccionar ningún día, muestra un aviso.
+     */
     private void mostrarSelectorDias() {
         if (selectorDiasAbierto) {
             return;
@@ -304,6 +343,7 @@ public class EditarTareaActivity extends AppCompatActivity {
         dialogo.show();
     }
 
+    /** Resume los días confirmados en el texto de la opción Personalizar. */
     private void actualizarTextoPersonalizar() {
         StringBuilder resumen = new StringBuilder();
 
@@ -324,6 +364,14 @@ public class EditarTareaActivity extends AppCompatActivity {
         );
     }
 
+    /**
+     * Válida el formulario y solicita la actualización en SQLite.
+     *
+     * Marca con setError} un nombre vacío o una duración inválida.
+     * Muestra un Toast si falta la repetición o si la selección personalizada no contiene días.
+     *
+     * Si SQLite falla o se rechazan los datos, muestra "No se pudieron guardar los cambios".
+     */
     private void guardarCambios() {
         if (cargando || guardando || tareaOriginal == null) {
             return;
@@ -449,6 +497,14 @@ public class EditarTareaActivity extends AppCompatActivity {
         });
     }
 
+
+    /**
+     * Calcula la fecha para una nueva programación de una sola vez.
+     *
+     * Usa hoy si la hora elegida aún es futura. Si ya llegó o pasó, usa el día siguiente.
+     *
+     * @return Fecha local en formato yyyy-MM-dd.
+     */
     private String calcularFechaUnica() {
         Calendar ahora = Calendar.getInstance();
         Calendar inicio = (Calendar) ahora.clone();
@@ -467,6 +523,14 @@ public class EditarTareaActivity extends AppCompatActivity {
         return formato.format(inicio.getTime());
     }
 
+
+    /**
+     * Comunica el resultado del guardado desde el hilo principal.
+     * Si la actualización se realizó, cierra la pantalla de edición.
+     *
+     * @param mensaje Texto que se mostrará al usuario.
+     * @param actualizada true si los cambios quedaron guardados.
+     */
     private void mostrarResultado(String mensaje, boolean actualizada) {
         runOnUiThread(() -> {
             if (isFinishing() || isDestroyed()) {
@@ -484,6 +548,12 @@ public class EditarTareaActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Habilita o deshabilita los campos, los botones y las opciones
+     * de repetición durante la carga o el guardado.
+     *
+     * @param habilitado true para permitir la edición y false para bloquear los controles.
+     */
     private void habilitarFormulario(boolean habilitado) {
         edtNombreTarea.setEnabled(habilitado);
         edtDescripcionTarea.setEnabled(habilitado);
@@ -496,6 +566,10 @@ public class EditarTareaActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Deja de aceptar nuevas operaciones al destruirse la pantalla.
+     * Las operaciones ya enviadas al ejecutor pueden terminar.
+     */
     @Override
     protected void onDestroy() {
         executor.shutdown();

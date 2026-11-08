@@ -35,21 +35,38 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+
+/**
+ * Muestra los datos de una tarea y permite tomar su fotografía inicial.
+ *
+ * Al pulsar Iniciar tarea con una foto válida, registra el inicio real en SQLite y abre TareaEnCursoActivity}.
+ * La fotografía queda como archivo en el dispositivo, el registro guarda su ruta.
+ */
 public class RealizarTareaActivity extends AppCompatActivity {
 
     private ImageView imgFotoAntes;
     private Button btnTomarFotoAntes;
     private Button btnIniciarTarea;
 
+    /** Ruta de la última foto que se pudo cargar y mostrar. */
     private String rutaFotoAntes;
+    /** Ruta del archivo de salida de una captura aún sin verificar. */
     private String rutaFotoPendiente;
 
     private long usuarioId;
     private long tareaId;
     private long inicioProgramado;
 
+    /** Guarda el registro de inicio fuera del hilo principal. */
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
+
+    /**
+     * Recibe el resultado de la cámara y verifica el archivo generado.
+     *
+     * Acepta la nueva foto si la cámara informa éxito, el archivo contiene datos y la imagen puede mostrarse.
+     * Si falla o se cancela la captura, elimina el archivo pendiente, conserva la foto aceptada y muestra, "No se guardó una nueva foto".
+     */
     private final ActivityResultLauncher<Intent> cameraLauncher =
             registerForActivityResult(
                     new ActivityResultContracts.StartActivityForResult(),
@@ -88,6 +105,14 @@ public class RealizarTareaActivity extends AppCompatActivity {
                     }
             );
 
+    /**
+     * Verifica la foto inicial y registra el comienzo de la realización.
+     *
+     * No inicia si hay una captura pendiente. Si falta la foto o el archivo ya no está disponible, avisa al usuario y permanece en la pantalla.
+     *
+     * Si el repositorio guarda el registro, abre la pantalla del cronómetro.
+     * Si la operación falla en SQLite o el repositorio rechaza la solicitud, vuelve a habilitar los botones y muestra un aviso.
+     */
     private void iniciarTarea() {
         if (rutaFotoPendiente != null) {
             return;
@@ -163,6 +188,9 @@ public class RealizarTareaActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Abre la cámara si se concede el permiso. Si se deniega, indica que debe permitirse para poder tomar la foto.
+     */
     private final ActivityResultLauncher<String> permisoCamaraLauncher =
             registerForActivityResult(
                     new ActivityResultContracts.RequestPermission(),
@@ -175,6 +203,14 @@ public class RealizarTareaActivity extends AppCompatActivity {
                     }
             );
 
+    /**
+     * Recibe los datos de la tarea y prepara la captura de la foto inicial.
+     *
+     * Si faltan el usuario, la tarea o el inicio programado, muestra "No se recibieron los datos de la tarea" y cierra la pantalla.
+     * Al recrearse, recupera las rutas guardadas y vuelve a mostrar la foto anterior si puede cargarla.
+     *
+     * @param savedInstanceState Estado guardado por Android al recrear la pantalla, o null si no existe.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -252,6 +288,13 @@ public class RealizarTareaActivity extends AppCompatActivity {
         );
     }
 
+
+    /**
+     * Prepara un archivo JPG y abre una aplicación de cámara para sacar la fotografía.
+     *
+     * Crea el archivo en la carpeta Pictures de la app y comparte su URI mediante FileProvider.
+     * Si no puede preparar el archivo o abrir la cámara, intenta borrar el archivo pendiente, habilita nuevamente el botón de captura y muestra un aviso.
+     */
     private void abrirCamara() {
         try {
             File carpeta = getExternalFilesDir(
@@ -304,6 +347,14 @@ public class RealizarTareaActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Carga y muestra una vista previa de la foto inicial.
+     *
+     * Lee primero las dimensiones sin cargar los píxeles. Aumenta el factor de muestreo hasta que las dimensiones estimadas no superen 1200 píxeles, para reducir el uso de memoria.
+     *
+     * @param ruta Ruta local del archivo de la fotografía.
+     * @return true si la imagen se pudo mostrar y false si sus dimensiones no son válidas o no se pudo decodificar.
+     */
     private boolean mostrarFoto(String ruta) {
         BitmapFactory.Options opciones = new BitmapFactory.Options();
         opciones.inJustDecodeBounds = true;
@@ -333,6 +384,9 @@ public class RealizarTareaActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * Abre la cámara si el permiso ya está concedido, si falta lo solicita.
+     */
     private void comprobarPermisoCamara() {
         if (ContextCompat.checkSelfPermission(
                 this,
@@ -344,6 +398,11 @@ public class RealizarTareaActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Guarda las rutas de la foto aceptada y de la captura pendiente para recuperarlas si Android recrea la pantalla.
+     *
+     * @param outState Estado en el que se guardarán las rutas.
+     */
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putString("foto_antes", rutaFotoAntes);
@@ -352,6 +411,10 @@ public class RealizarTareaActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
     }
 
+    /**
+     * Deja de aceptar nuevas operaciones cuando se destruye la pantalla.
+     * Las operaciones ya enviadas al ejecutor pueden terminar.
+     */
     @Override
     protected void onDestroy() {
         executor.shutdown();

@@ -17,6 +17,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * La funcion de esta clase es mostrar el historial de realizaciones completadas en un RecyclerView.
+ *
+ * Cada fila presenta el nombre de la tarea, la fecha de finalización y el tiempo empleado.
+ * Cuando el usuario toca una fila, el adaptador comunica qué registro seleccionó para que la pantalla abra su resultado.
+ */
 public class HistorialTareasAdapter extends
         RecyclerView.Adapter<HistorialTareasAdapter.HistorialViewHolder> {
 
@@ -31,12 +37,29 @@ public class HistorialTareasAdapter extends
         this.acciones = acciones;
     }
 
+
+    /**
+     * Reemplaza los registros mostrados y solicita al RecyclerView que actualice sus filas. Debe llamarse desde el hilo principal.
+     *
+     * @param nuevaLista Registros en el orden en que se mostrarán.
+     *                   La lista no debe ser nula y cada registro debe
+     *                   tener inicio y fin reales.
+     */
     public void actualizarLista(List<RegistroTarea> nuevaLista) {
         registros.clear();
         registros.addAll(nuevaLista);
         notifyDataSetChanged();
     }
 
+
+
+    /**
+     * Crea una fila a partir del diseño item_historial.xml.
+     *
+     * @param parent Contenedor al que se incorporará la fila.
+     * @param viewType Tipo de vista solicitado; se utiliza un único diseño.
+     * @return ViewHolder con las referencias a los componentes de la fila.
+     */
     @NonNull
     @Override
     public HistorialViewHolder onCreateViewHolder(
@@ -49,6 +72,15 @@ public class HistorialTareasAdapter extends
         return new HistorialViewHolder(fila);
     }
 
+
+    /**
+     * Vincula un registro con su fila y configura la acción al tocarla.
+     *
+     * Muestra la fecha a partir del fin real y calcula la duración como la diferencia entre el fin y el inicio reales.
+     *
+     * @param holder Fila que se actualizará.
+     * @param position Posición del registro en la lista.
+     */
     @Override
     public void onBindViewHolder(
             @NonNull HistorialViewHolder holder,
@@ -67,6 +99,7 @@ public class HistorialTareasAdapter extends
                 "Realizada: " + formato.format(new Date(registro.getFinReal()))
         );
 
+        /** Convierte la duración a segundos enteros y evita mostrar valores negativos. */
         long segundos = Math.max(
                 0L,
                 registro.getFinReal() - registro.getInicioReal()
@@ -87,17 +120,29 @@ public class HistorialTareasAdapter extends
         );
     }
 
+
+    /**
+     * Devuelve la cantidad de filas que debe mostrar el RecyclerView.
+     *
+     * @return Número de registros del historial.
+     */
     @Override
     public int getItemCount() {
         return registros.size();
     }
 
+    /** Conserva las referencias a los campos de una fila reutilizable. */
     static class HistorialViewHolder extends RecyclerView.ViewHolder {
 
         final TextView nombre;
         final TextView fecha;
         final TextView tiempo;
 
+        /**
+         * Localiza los campos del diseño de la fila.
+         *
+         * @param itemView Vista de la fila del historial.
+         */
         HistorialViewHolder(@NonNull View itemView) {
             super(itemView);
 

@@ -27,8 +27,14 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Muestra el formulario para crear una tarea del usuario actual.
+ *
+ * Permite ingresar sus datos, elegir una hora de inicio y configurar la repetición. Valida el formulario y llama a el guardado en SQLite a TareaRepository.
+ */
 public class CrearTareaActivity extends AppCompatActivity {
 
+    // El valor -1 indica que todavía no se ha confirmado una hora.
     private int horaInicio = -1;
     private int minutoInicio = -1;
     private long usuarioId;
@@ -38,9 +44,11 @@ public class CrearTareaActivity extends AppCompatActivity {
     private EditText edtDuracion;
     private Button btnGuardarTarea;
 
+    /** Ejecuta el guardado en SQLite fuera del hilo principal. */
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor();
 
+    /** Selección confirmada de días, ordenada de lunes a domingo. */
     private final String[] nombresDias = {
             "Lunes",
             "Martes",
@@ -51,11 +59,20 @@ public class CrearTareaActivity extends AppCompatActivity {
             "Domingo"
     };
 
+    /** Selección confirmada de días, ordenada de lunes a domingo. */
     private boolean[] diasSeleccionados = new boolean[7];
 
     private int repeticionAnterior = R.id.rbUnaVez;
     private boolean selectorDiasAbierto = false;
 
+
+    /**
+     * Carga el formulario y configura el guardado, el reloj y la repetición.
+     *
+     * Si falta el ID del usuario, muestra "No se recibió el usuario. Inicia sesión nuevamente." y cierra la pantalla.
+     *
+     * @param savedInstanceState Estado guardado por Android, o null si no existe.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,10 +88,10 @@ public class CrearTareaActivity extends AppCompatActivity {
             return;
         }
 
-        edtNombreTarea = findViewById(R.id.edtNombreTareaEditar);
-        edtDescripcionTarea = findViewById(R.id.edtDescripcionTareaEditar);
-        edtDuracion = findViewById(R.id.edtDuracionEditar);
-        btnGuardarTarea = findViewById(R.id.btnGuardarTareaEditar);
+        edtNombreTarea = findViewById(R.id.edtNombreTarea);
+        edtDescripcionTarea = findViewById(R.id.edtDescripcionTarea);
+        edtDuracion = findViewById(R.id.edtDuracion);
+        btnGuardarTarea = findViewById(R.id.btnGuardarTarea);
 
         btnGuardarTarea.setOnClickListener(v -> guardarTarea());
 
@@ -96,9 +113,11 @@ public class CrearTareaActivity extends AppCompatActivity {
         );
 
         // SELECTOR DE HORA
-        Button btnHoraInicio = findViewById(R.id.btnHoraInicioEditar);
+        Button btnHoraInicio = findViewById(R.id.btnHoraInicio);
 
         btnHoraInicio.setOnClickListener(v -> {
+            // Las 08:00 son solo el valor inicial del reloj.
+            // La hora de la tarea se asigna cuando el usuario confirma.
             MaterialTimePicker reloj = new MaterialTimePicker.Builder()
                     .setTitleText("Hora de inicio")
                     .setTimeFormat(TimeFormat.CLOCK_24H)
@@ -128,7 +147,7 @@ public class CrearTareaActivity extends AppCompatActivity {
         });
 
         // REPETICIÓN
-        RadioGroup rgRepeticion = findViewById(R.id.rgRepeticionEditar);
+        RadioGroup rgRepeticion = findViewById(R.id.rgRepeticion);
         RadioButton rbPersonalizar = findViewById(R.id.rbElegirDias);
 
         rgRepeticion.check(R.id.rbUnaVez);
@@ -147,6 +166,13 @@ public class CrearTareaActivity extends AppCompatActivity {
         );
     }
 
+    /**
+     * Abre el diálogo de selección de días para la repetición personalizada.
+     *
+     * Si intenta aceptar sin marcar ningún día, muestra "Selecciona al menos un día" y mantiene abierto el diálogo.
+     *
+     * @param grupo Grupo de opciones de repetición del formulario.
+     */
     private void mostrarSelectorDias(RadioGroup grupo) {
         if (selectorDiasAbierto) {
             return;
@@ -206,6 +232,7 @@ public class CrearTareaActivity extends AppCompatActivity {
         dialogo.show();
     }
 
+    /** Muestra los días confirmados en el texto de la opción Personalizar. */
     private void actualizarTextoPersonalizar() {
         StringBuilder resumen = new StringBuilder();
 
@@ -223,6 +250,15 @@ public class CrearTareaActivity extends AppCompatActivity {
         rbPersonalizar.setText("Personalizar: " + resumen);
     }
 
+    /**
+     * Valida el formulario, prepara la repetición y guarda la tarea en SQLite.
+     *
+     * Marca con setError los problemas del nombre o de la duración.
+     * Muestra un Toast si falta la hora, la opción de repetición o algún día en la selección personalizada. La descripción es opcional.
+     *
+     * Si los datos son válidos, deshabilita el botón mientras guarda.
+     * Los errores de SQLite o los argumentos inválidos rechazados por el repositorio se comunican con "No se pudo guardar la tarea".
+     */
     private void guardarTarea() {
         String nombre = edtNombreTarea.getText().toString().trim();
         String descripcion = edtDescripcionTarea.getText().toString().trim();
@@ -300,6 +336,7 @@ public class CrearTareaActivity extends AppCompatActivity {
             return;
         }
 
+        // Captura los valores del formulario para el guardado en segundo plano.
         final String repeticionGuardar = repeticion;
         final String fechaGuardar = fechaUnica;
         final boolean[] diasGuardar = dias.clone();
@@ -335,6 +372,13 @@ public class CrearTareaActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Calcula la fecha de una tarea que se realizará una sola vez.
+     *
+     * Usa el día de hoy si la hora elegida todavía es futura. Si esa hora ya llegó o pasó, usa el día siguiente.
+     *
+     * @return Fecha local en formato yyyy-MM-dd.
+     */
     private String calcularFechaUnica() {
         Calendar ahora = Calendar.getInstance();
         Calendar inicio = (Calendar) ahora.clone();
@@ -352,6 +396,13 @@ public class CrearTareaActivity extends AppCompatActivity {
         return formato.format(inicio.getTime());
     }
 
+    /**
+     * Habilita el botón y muestra el resultado del guardado en el hilo principal.
+     * Si la tarea se guardó, cierra el formulario, si falló, permite reintentar.
+     *
+     * @param mensaje Texto que se mostrará al usuario.
+     * @param guardada true si la tarea se guardó correctamente.
+     */
     private void mostrarResultadoGuardado(
             String mensaje,
             boolean guardada
@@ -371,6 +422,11 @@ public class CrearTareaActivity extends AppCompatActivity {
         });
     }
 
+
+    /**
+     * Deja de aceptar nuevas operaciones al destruirse la pantalla.
+     * Las operaciones ya enviadas al ejecutor pueden terminar.
+     */
     @Override
     protected void onDestroy() {
         executor.shutdown();

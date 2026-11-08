@@ -23,6 +23,11 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Muestra el tiempo transcurrido de una tarea iniciada.
+ *
+ * Recupera de SQLite el inicio y, si ya existe, el fin real. Al pulsar Finalizar tarea, guarda el instante de término y abre FinalizarTareaActivity para tomar la fotografía final.
+ */
 public class TareaEnCursoActivity extends AppCompatActivity {
 
     private long usuarioId;
@@ -39,9 +44,13 @@ public class TareaEnCursoActivity extends AppCompatActivity {
     private final Handler handler =
             new Handler(Looper.getMainLooper());
 
+    /** Ejecuta las operaciones de SQLite fuera del hilo principal. */
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor();
 
+    /**
+     * Actualiza el tiempo en pantalla y programa otra actualización después de un segundo si todavía no hay un fin guardado.
+     */
     private final Runnable actualizarTiempo = new Runnable() {
         @Override
         public void run() {
@@ -57,6 +66,14 @@ public class TareaEnCursoActivity extends AppCompatActivity {
         }
     };
 
+    /**
+     * Recibe los datos a traves del Intent y prepara el cronómetro y el botón de finalización.
+     *
+     * Si falta el usuario o el registro, muestra "No se recibieron los datos de la realización" y cierra la pantalla. El botón permanece deshabilitado
+     * hasta que se cargue un registro que pueda finalizarse.
+     *
+     * @param savedInstanceState Estado guardado por Android al recrear la pantalla, o null si no existe.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,6 +125,10 @@ public class TareaEnCursoActivity extends AppCompatActivity {
         );
     }
 
+
+    /**
+     * Recarga el registro al entrar o volver a la pantalla para actualizar el tiempo mostrado y el estado del botón.
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -120,6 +141,14 @@ public class TareaEnCursoActivity extends AppCompatActivity {
         cargarRegistro();
     }
 
+
+    /**
+     * Consulta el registro en segundo plano y aplica sus datos en el hilo principal.
+     *
+     * Habilita el botón solo si el registro está en estado EN_CURSO y todavía no tiene un fin real. Si no encuentra un registro iniciado, muestra
+     * "No se encontró una realización iniciada" y cierra la pantalla.
+     * Si SQLite falla, muestra "No se pudo consultar la realización".
+     */
     private void cargarRegistro() {
         btnFinalizarTarea.setEnabled(false);
 
@@ -171,6 +200,12 @@ public class TareaEnCursoActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Calcula y muestra el tiempo transcurrido en formato horas:minutos:segundos.
+     *
+     * Usa la hora actual mientras la tarea sigue en curso, o el fin guardado si ya terminó. El cálculo parte del inicio real y no de la cantidad.
+     * Requiere que el inicio esté cargado.
+     */
     private void mostrarTiempo() {
         long instanteFinal = finReal == null
                 ? System.currentTimeMillis()
@@ -193,6 +228,15 @@ public class TareaEnCursoActivity extends AppCompatActivity {
         );
     }
 
+
+    /**
+     * Guarda el instante en que el usuario pulsa Finalizar tarea.
+     *
+     * Si se guarda correctamente, detiene la actualización del cronómetro y abre la pantalla de la foto final.
+     * En este paso se guarda el tiempo de término y el resultado se completa al guardar la fotografía.
+     *
+     * Si el repositorio no registra el fin o falla SQLite, muestra "No se pudo finalizar la tarea" y vuelve a consultar el registro.
+     */
     private void finalizarTarea() {
         final long instanteFin = System.currentTimeMillis();
 
@@ -250,6 +294,7 @@ public class TareaEnCursoActivity extends AppCompatActivity {
         });
     }
 
+    /** Suspende las actualizaciones visuales al salir de la pantalla. */
     @Override
     protected void onPause() {
         pantallaVisible = false;
@@ -257,6 +302,10 @@ public class TareaEnCursoActivity extends AppCompatActivity {
         super.onPause();
     }
 
+    /**
+     * Retira las actualizaciones pendientes y deja de aceptar nuevas
+     * operaciones en el ejecutor. Las ya enviadas pueden terminar.
+     */
     @Override
     protected void onDestroy() {
         handler.removeCallbacks(actualizarTiempo);

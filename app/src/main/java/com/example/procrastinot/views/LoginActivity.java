@@ -22,11 +22,24 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Muestra la pantalla de inicio de sesión de Procrastinot.
+ *
+ * Comprueba que el usuario ingrese un correo y una contraseña y consulta las credenciales en SQLite a traves de la clase UsuarioRepository.
+ * Si coinciden, abre PrincipalActivity con el ID y el nombre del usuario. También ofrece acceso RegistroActivity.
+ */
 public class LoginActivity extends AppCompatActivity {
 
-    private final ExecutorService executor =
-            Executors.newSingleThreadExecutor();
+    /** Ejecuta las consultas a SQLite fuera del hilo principal. */
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
+
+    /**
+     * Carga el formulario, enlaza sus controles y configura las acciones para iniciar sesión o abrir el registro.
+     * Los campos vacíos, el correo no registrado y la contraseña incorrecta se indican mediante mensajes en el campo correspondiente.
+     *
+     * @param savedInstanceState Estado guardado por Android al recrear la pantalla, o null si no existe.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +60,7 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         btnLogin.setOnClickListener(v -> {
+            // Normaliza el correo igual que en el registro y conserva la contraseña exactamente como se ingresó.
             String correo = edtEmail.getText().toString().trim().toLowerCase(Locale.ROOT);
 
             String contrasena = edtPassword.getText().toString();
@@ -63,6 +77,7 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
+            // Evita otro intento mientras se consulta la base de datos
             btnLogin.setEnabled(false);
 
             executor.execute(() -> {
@@ -154,6 +169,10 @@ public class LoginActivity extends AppCompatActivity {
         );
     }
 
+    /**
+     * Deja de aceptar nuevas consultas al destruirse la pantalla.
+     * Las operaciones ya enviadas al ejecutor pueden terminar.
+     */
     @Override
     protected void onDestroy() {
         executor.shutdown();

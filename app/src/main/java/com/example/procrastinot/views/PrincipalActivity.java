@@ -28,8 +28,13 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Muestra la pantalla principal del usuario y su próxima tarea activa.
+ *
+ * Permite crear tareas, abrir Mis tareas, consultar el historial y continuar a la pantalla para realizar la tarea proxima.
+ */
 public class PrincipalActivity extends AppCompatActivity {
-private long usuarioId; //Guarda id del usuario
+    private long usuarioId; //Guarda id del usuario
 
     private TextView txtProximaTarea;
     private TextView txtHoraTarea;
@@ -41,12 +46,18 @@ private long usuarioId; //Guarda id del usuario
     private boolean pantallaVisible = false;
     private boolean cargando = false;
 
+    /**
+     * Ejecuta las consultas de SQLite fuera del hilo principal.
+     */
     private final ExecutorService executor =
             Executors.newSingleThreadExecutor();
 
     private final Handler handler =
             new Handler(Looper.getMainLooper());
 
+    /**
+     * Solicita actualizar la próxima tarea cada 30 segundos mientras la pantalla está visible.
+     */
     private final Runnable actualizarPrincipal = new Runnable() {
         @Override
         public void run() {
@@ -58,6 +69,14 @@ private long usuarioId; //Guarda id del usuario
     };
 
 
+    /**
+     * Recibe los datos del usuario y configura los botones de navegación.
+     * <p>
+     * Si no se recibe el ID de usuario, muestra "Inicia sesión nuevamente" y cierra la pantalla.
+     * El botón Comenzar tarea se habilita cuando se encuentra una próxima tarea.
+     *
+     * @param savedInstanceState Estado guardado por Android al recrear la pantalla, o null si no existe.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -124,8 +143,6 @@ private long usuarioId; //Guarda id del usuario
         });
 
 
-
-
 // Botón abrir la próxima tarea
         btnComenzarTarea.setOnClickListener(v -> {
             if (tareaProxima == null) {
@@ -186,6 +203,9 @@ private long usuarioId; //Guarda id del usuario
         handler.post(actualizarPrincipal);
     }
 
+    /**
+     * Suspende las actualizaciones periódicas al dejar la pantalla.
+     */
     @Override
     protected void onPause() {
         pantallaVisible = false;
@@ -193,7 +213,17 @@ private long usuarioId; //Guarda id del usuario
         super.onPause();
     }
 
+    /**
+     * Consulta las tareas del usuario y selecciona el inicio más cercano.
+     * <p>
+     * Ignora las tareas desactivadas, eliminadas o sin un próximo inicio.
+     * Usa el horario y la repetición para elegir la tarea.
+     * <p>
+     * Actualiza la interfaz desde el hilo principal. Si no hay una tarea próxima, muestra un aviso y deshabilita Comenzar tarea.
+     * Si falla SQLite, muestra "No se pudo consultar la próxima tarea".
+     */
     private void cargarProximaTarea() {
+        // Evita iniciar otra consulta si la anterior aún no terminó.
         if (cargando) {
             return;
         }
@@ -292,6 +322,17 @@ private long usuarioId; //Guarda id del usuario
         });
     }
 
+    /**
+     * Calcula el primer inicio igual o posterior al instante de referencia.
+     *
+     * Para una tarea de una sola vez, combina la fecha guardada con su hora.
+     * Para una diaria, usa hoy o mañana según si la hora ya pasó.
+     * Para una semanal, revisa desde hoy hasta siete días después y devuelve el primer día seleccionado cuyo horario no haya pasado.
+     *
+     * @param tarea Tarea cuyo horario y repetición se evaluarán.
+     * @param ahora Instante de referencia en milisegundos desde la época Unix.
+     * @return Próximo inicio en milisegundos desde la época Unix, o -1 si no se puede determinar.
+     */
     private long calcularProximoInicio(Tarea tarea, long ahora) {
         Calendar inicio = Calendar.getInstance();
         inicio.setTimeInMillis(ahora);
@@ -361,12 +402,10 @@ private long usuarioId; //Guarda id del usuario
         return -1;
     }
 
-
-
-
-
-
-
+    /**
+     * Retira las actualizaciones pendientes y deja de aceptar nuevas consultas.
+     * Las consultas ya enviadas al ejecutor pueden terminar.
+     */
     @Override
     protected void onDestroy() {
         handler.removeCallbacks(actualizarPrincipal);
