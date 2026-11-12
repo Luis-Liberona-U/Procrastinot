@@ -29,6 +29,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.procrastinot.R;
 import com.example.procrastinot.repositories.RegistroTareaRepository;
+import com.example.procrastinot.security.SesionManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -219,6 +220,7 @@ public class RealizarTareaActivity extends AppCompatActivity {
         setContentView(R.layout.activity_realizar_tarea);
 
         usuarioId = getIntent().getLongExtra("usuario_id", -1);
+
         tareaId = getIntent().getLongExtra("tarea_id", -1);
         inicioProgramado = getIntent().getLongExtra("inicio_programado", -1);
 
@@ -228,8 +230,11 @@ public class RealizarTareaActivity extends AppCompatActivity {
             return;
         }
 
-
-
+        if (new SesionManager(this).obtenerUsuarioId() != usuarioId) {
+            Toast.makeText(this, "Inicia sesión con la cuenta de esta tarea", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
 
         TextView txtNombre = findViewById(R.id.txtNombreTareaRealizar);

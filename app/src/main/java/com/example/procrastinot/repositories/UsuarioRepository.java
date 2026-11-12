@@ -84,7 +84,6 @@ public class UsuarioRepository {
         long inicio = android.os.SystemClock.elapsedRealtime();
         String hash = PasswordUtils.generarHash(contrasena);
 
-        android.util.Log.d("Procrastinot", "Tiempo del hash: " + (android.os.SystemClock.elapsedRealtime() - inicio) + " ms");
 
         // Genera el hash antes de guardar la cuenta.
         valores.put(Usuarios.COLUMN_PASSWORD_HASH, PasswordUtils.generarHash(contrasena)

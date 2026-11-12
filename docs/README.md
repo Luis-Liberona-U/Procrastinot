@@ -15,7 +15,7 @@ El proyecto busca ayudar al usuario a organizar sus actividades y llevar un hist
 
 ## Funcionalidades implementadas
 
-- - Registro de cuentas en SQLite e inicio de sesión con verificación de contraseñas mediante Argon2id.
+- Registro de cuentas en SQLite e inicio de sesión con verificación de contraseñas mediante Argon2id.
 - Pantalla principal con el nombre del usuario y su próxima tarea activa.
 - Creación de tareas con:
     - Nombre.
@@ -33,6 +33,9 @@ El proyecto busca ayudar al usuario a organizar sus actividades y llevar un hist
 - Historial de realizaciones completadas con acceso a sus resultados.
 - Solicitud del permiso de cámara durante el uso de la aplicación.
 - Protección mediante `FLAG_SECURE` en inicio de sesión y registro.
+- Registro de cuentas en SQLite e inicio de sesión con verificación de contraseñas mediante Argon2id.
+- Recordatorios locales a la hora de inicio para tareas de una sola vez, diarias, de lunes a viernes y
+con días personalizados. Al tocar el aviso, se abre la pantalla para comenzar la tarea.
 
 ## Flujo de uso
 
@@ -109,6 +112,7 @@ Si el usuario rechaza el permiso, se informa que debe habilitarlo para continuar
 
 El almacenamiento de fotografías en la carpeta específica de la aplicación no requiere permisos generales de almacenamiento en las versiones de Android utilizadas por el proyecto.
 
+En Android 13 o superior, la app solicita permiso para mostrar notificaciones desde la pantalla de creación de tareas. Si tiene acceso a alarmas exactas, programa el aviso como una alarma de reloj; en caso contrario, usa un aviso aproximado que puede llegar más tarde.
 ## Seguridad
 
 Los repositorios utilizan consultas parametrizadas y `ContentValues` para trabajar con SQLite sin incorporar directamente los valores ingresados por el usuario en las sentencias SQL.
@@ -164,7 +168,7 @@ Se documentan los parámetros mediante `@param`, los valores de retorno mediante
 
 Proyecto en desarrollo. Entre las funcionalidades pendientes de completar o verificar se encuentran:
 
-- Notificaciones previas y alarmas de inicio.
+- Aviso anticipado 10 minutos antes del inicio de la tarea.
 - Persistencia del cambio de activación o desactivación de tareas.
 - Recuperación de realizaciones pendientes desde Principal.
 - Exclusión de realizaciones ya completadas al seleccionar la próxima tarea.

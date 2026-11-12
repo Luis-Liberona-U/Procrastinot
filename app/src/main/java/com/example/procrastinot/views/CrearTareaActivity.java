@@ -1,6 +1,9 @@
 package com.example.procrastinot.views;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteException;
+import android.os.Build;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -9,6 +12,8 @@ import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -16,6 +21,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.procrastinot.R;
+import com.example.procrastinot.notifications.RecordatorioScheduler;
 import com.example.procrastinot.repositories.TareaRepository;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.timepicker.MaterialTimePicker;
@@ -164,6 +170,7 @@ public class CrearTareaActivity extends AppCompatActivity {
         rbPersonalizar.setOnClickListener(v ->
                 mostrarSelectorDias(rgRepeticion)
         );
+        pedirPermisoNotificaciones();
     }
 
     /**
@@ -291,7 +298,7 @@ public class CrearTareaActivity extends AppCompatActivity {
             return;
         }
 
-        RadioGroup grupo = findViewById(R.id.rgRepeticionEditar);
+        RadioGroup grupo = findViewById(R.id.rgRepeticion);
         int opcion = grupo.getCheckedRadioButtonId();
 
         String repeticion;
@@ -349,7 +356,7 @@ public class CrearTareaActivity extends AppCompatActivity {
             TareaRepository repository = new TareaRepository(getApplicationContext());
 
             try {
-                repository.crearTarea(
+                long tareaId = repository.crearTarea(
                         usuarioId,
                         nombre,
                         descripcion,
@@ -361,7 +368,32 @@ public class CrearTareaActivity extends AppCompatActivity {
                         diasGuardar
                 );
 
-                mostrarResultadoGuardado("Tarea guardada correctamente", true);
+                if (tareaId <= 0) {
+                    mostrarResultadoGuardado("No se pudo guardar la tarea", false);
+                    return;
+                }
+
+                boolean programado;
+                try {
+                    programado = RecordatorioScheduler.programarProxima(
+                            getApplicationContext(),
+                            usuarioId,
+                            tareaId,
+                            repeticionGuardar,
+                            fechaGuardar,
+                            horaGuardar,
+                            minutoGuardar,
+                            diasGuardar
+                    );
+
+                } catch (SecurityException | IllegalArgumentException e) {
+                    android.util.Log.e("CrearTarea", "Error al programar el aviso", e);
+                    programado = false;
+                }
+
+
+                mostrarResultadoGuardado(programado ? "Tarea guardada correctamente" : "Tarea guardada, pero no se pudo programar el aviso", true);
+
 
             } catch (SQLiteException | IllegalArgumentException e) {
                 mostrarResultadoGuardado("No se pudo guardar la tarea", false);
@@ -423,10 +455,22 @@ public class CrearTareaActivity extends AppCompatActivity {
     }
 
 
-    /**
-     * Deja de aceptar nuevas operaciones al destruirse la pantalla.
-     * Las operaciones ya enviadas al ejecutor pueden terminar.
-     */
+    /** Recibe la respuesta a la solicitud de permiso para mostrar notificaciones. */
+    private final ActivityResultLauncher<String> permisoNotificaciones = registerForActivityResult(
+                    new ActivityResultContracts.RequestPermission(),
+                    concedido -> {
+                        if (!concedido) {Toast.makeText(this, "Puedes guardar tareas, pero no recibirás avisos", Toast.LENGTH_SHORT).show();}
+                    }
+            );
+
+    /** Solicita el permiso de notificaciones en Android 13 o superior si todavía no está concedido. */
+    private void pedirPermisoNotificaciones() {
+        if (Build.VERSION.SDK_INT >= 33
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            permisoNotificaciones.launch(Manifest.permission.POST_NOTIFICATIONS);
+        }
+    }
     @Override
     protected void onDestroy() {
         executor.shutdown();
