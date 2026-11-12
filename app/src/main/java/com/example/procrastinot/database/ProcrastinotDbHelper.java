@@ -215,9 +215,9 @@ public class ProcrastinotDbHelper extends SQLiteOpenHelper {
     /**
      * Actualiza el esquema de una base de datos existente.
      *
-     * Actualmente se encuentra en la version 2 debido agregar la columna "eliminada"
+     * Actualmente, se encuentra en la version 2 debido agregar la columna "eliminada"
      * a la tabla de tareas sin borrar los datos guardados.
-     * Las tareas existentes reciben el valor 0: no eliminadas.a
+     * Las tareas existentes reciben el valor 0: no eliminadas.
      *
      * @param db Conexión a la base de datos que se actualizará.
      * @param oldVersion Versión anterior del esquema.

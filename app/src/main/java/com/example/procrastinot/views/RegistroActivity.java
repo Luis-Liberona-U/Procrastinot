@@ -3,6 +3,7 @@ package com.example.procrastinot.views;
 import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
 import android.util.Patterns;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -47,6 +48,10 @@ public class RegistroActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Protege el formulario frente a capturas de pantalla.
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_registro);
 

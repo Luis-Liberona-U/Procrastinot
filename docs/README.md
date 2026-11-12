@@ -15,7 +15,7 @@ El proyecto busca ayudar al usuario a organizar sus actividades y llevar un hist
 
 ## Funcionalidades implementadas
 
-- Registro de cuentas e inicio de sesión con SQLite.
+- - Registro de cuentas en SQLite e inicio de sesión con verificación de contraseñas mediante Argon2id.
 - Pantalla principal con el nombre del usuario y su próxima tarea activa.
 - Creación de tareas con:
     - Nombre.
@@ -58,6 +58,7 @@ La duración se calcula entre la confirmación del inicio y la pulsación de Fin
 - SQLite y SQLiteOpenHelper.
 - FileProvider y Activity Result API.
 - ExecutorService y Handler.
+- Argon2Kt para generar y verificar hashes Argon2id.
 
 ## Organización del proyecto
 
@@ -116,7 +117,11 @@ La captura de fotografías utiliza `FileProvider` para compartir temporalmente u
 
 Las pantallas de inicio de sesión y registro utilizan `FLAG_SECURE` para proteger su contenido frente a capturas de pantalla.
 
-El almacenamiento de contraseñas mediante hash está pendiente de implementación.
+Las contraseñas de las cuentas nuevas se guardan en SQLite como hashes
+Argon2id, con una sal aleatoria por cuenta. Al iniciar sesión, la aplicación
+busca la cuenta por correo y verifica la contraseña ingresada con el hash
+almacenado. Las cuentas creadas con el formato anterior no se migran;
+para probar esta versión, registra una cuenta nueva.
 
 ## Diagramas
 
@@ -149,3 +154,11 @@ Proyecto en desarrollo. Entre las funcionalidades pendientes de completar o veri
 - Persistencia del cambio de activación o desactivación de tareas.
 - Recuperación de realizaciones pendientes desde Principal.
 - Exclusión de realizaciones ya completadas al seleccionar la próxima tarea.
+
+## Cómo ejecutar el proyecto
+
+1. Clona o descarga el repositorio.
+2. Ábrelo en Android Studio y sincroniza Gradle.
+3. Conecta un teléfono Android con depuración USB o inicia un emulador.
+   La aplicación requiere Android 10 (API 29) o superior.
+4. Ejecuta la app y registra una cuenta nueva.

@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import com.example.procrastinot.database.ProcrastinotContract.Usuarios;
 import com.example.procrastinot.database.ProcrastinotDbHelper;
 import com.example.procrastinot.models.Usuario;
+import com.example.procrastinot.security.PasswordUtils;
 
 /**
  * Gestiona el registro y la consulta de usuarios en SQLite.
@@ -59,7 +60,7 @@ public class UsuarioRepository {
      *
      * La Activity debe validar los datos antes de llamar a este metodo.
      * La restricción UNIQUE de la tabla impide repetir un correo.
-     * La contraseña se guarda tal como se recibe.
+     * La contraseña se transforma en un hash antes de almacenarse.
      *
      * @param nombre Nombre del usuario.
      * @param correo Correo electrónico de la cuenta.
@@ -79,8 +80,15 @@ public class UsuarioRepository {
         ContentValues valores = new ContentValues();
         valores.put(Usuarios.COLUMN_NOMBRE, nombre);
         valores.put(Usuarios.COLUMN_CORREO, correo);
-        valores.put(Usuarios.COLUMN_PASSWORD_HASH, contrasena);
 
+        long inicio = android.os.SystemClock.elapsedRealtime();
+        String hash = PasswordUtils.generarHash(contrasena);
+
+        android.util.Log.d("Procrastinot", "Tiempo del hash: " + (android.os.SystemClock.elapsedRealtime() - inicio) + " ms");
+
+        // Genera el hash antes de guardar la cuenta.
+        valores.put(Usuarios.COLUMN_PASSWORD_HASH, PasswordUtils.generarHash(contrasena)
+        );
         return db.insert(
                 Usuarios.TABLE_NAME,
                 null,
@@ -102,23 +110,23 @@ public class UsuarioRepository {
      * @param correo Correo electrónico de la cuenta.
      * @param contrasena Contraseña que se comparará con la almacenada.
      * @return Usuario encontrado, o null si las credenciales no coinciden.
-     * @throws android.database.sqlite.SQLiteException
-     *         Si ocurre un error al abrir o consultar la base de datos.
+     * @throws android.database.sqlite.SQLiteException Si ocurre un error al abrir o consultar la base de datos.
+     * @throws IllegalStateException Si no se puede calcular el hash.
      */
     public Usuario iniciarSesion(String correo, String contrasena) {
         SQLiteDatabase db = helper.getReadableDatabase();
 
-        String filtro = Usuarios.COLUMN_CORREO + " = ? AND "
-                + Usuarios.COLUMN_PASSWORD_HASH + " = ?";
+        String filtro = Usuarios.COLUMN_CORREO + " = ?";
 
-        String[] argumentos = {correo, contrasena};
+        String[] argumentos = {correo};
 
         try (Cursor cursor = db.query(
                 Usuarios.TABLE_NAME,
                 new String[]{
                         Usuarios._ID,
                         Usuarios.COLUMN_NOMBRE,
-                        Usuarios.COLUMN_CORREO
+                        Usuarios.COLUMN_CORREO,
+                        Usuarios.COLUMN_PASSWORD_HASH
                 },
                 filtro,
                 argumentos,
@@ -126,7 +134,15 @@ public class UsuarioRepository {
                 null,
                 null
         )) {
-            if (cursor.moveToFirst()) {
+            if (!cursor.moveToFirst()) {
+                return null;
+            }
+
+            String hash = cursor.getString(cursor.getColumnIndexOrThrow(Usuarios.COLUMN_PASSWORD_HASH));
+
+            if (!PasswordUtils.verificar(contrasena, hash)) {
+                return null;
+            }
 
                 // Convierte la fila encontrada en un objeto del modelo Usuario.
                 Usuario usuario = new Usuario();
@@ -138,9 +154,9 @@ public class UsuarioRepository {
                 usuario.setCorreo(cursor.getString(cursor.getColumnIndexOrThrow(Usuarios.COLUMN_CORREO)));
 
                 return usuario;
-            }
 
-            return null;
+
+
         }
     }
 }
