@@ -18,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.procrastinot.R;
 import com.example.procrastinot.models.Usuario;
 import com.example.procrastinot.repositories.UsuarioRepository;
+import com.example.procrastinot.security.SesionManager;
 
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -121,6 +122,9 @@ public class LoginActivity extends AppCompatActivity {
                             edtPassword.requestFocus();
                             return;
                         }
+
+                        // Sesiones
+                        new SesionManager(this).guardarSesion(usuario.getId());
 
                         Intent intent = new Intent(
                                 LoginActivity.this,

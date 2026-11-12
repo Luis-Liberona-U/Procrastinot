@@ -159,4 +159,28 @@ public class UsuarioRepository {
 
         }
     }
+
+    /**
+     * Busca una cuenta por su ID sin consultar sus credenciales.
+     *
+     * @param usuarioId ID de la cuenta guardada en la sesión.
+     * @return Usuario encontrado o null si ya no existe.
+     */
+    public Usuario buscarPorId(long usuarioId) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+
+        try (Cursor cursor = db.query(
+                Usuarios.TABLE_NAME,
+                new String[]{Usuarios._ID, Usuarios.COLUMN_NOMBRE, Usuarios.COLUMN_CORREO},
+                Usuarios._ID + " = ?",
+                new String[]{String.valueOf(usuarioId)},
+                null, null, null
+        )) {
+            if (!cursor.moveToFirst()) {
+                return null;
+            }
+
+            return new Usuario(cursor.getLong(0), cursor.getString(1), cursor.getString(2));
+        }
+    }
 }

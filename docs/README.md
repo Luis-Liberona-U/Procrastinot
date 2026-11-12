@@ -123,6 +123,20 @@ busca la cuenta por correo y verifica la contraseña ingresada con el hash
 almacenado. Las cuentas creadas con el formato anterior no se migran;
 para probar esta versión, registra una cuenta nueva.
 
+## Sesión persistente
+
+Después de un inicio de sesión correcto, `SesionManager` guarda únicamente
+el ID del usuario en `SharedPreferences`. La contraseña y su hash no se
+guardan en las preferencias.
+
+Al abrir la aplicación, `BienvenidaActivity` comprueba en SQLite que la
+cuenta guardada siga existiendo. Si existe, abre la pantalla Principal
+sin pedir la contraseña otra vez. Si no hay una sesión válida, el botón
+«Comenzar» permite acceder al inicio de sesión.
+
+Al pulsar «Cerrar sesión», la aplicación elimina el ID guardado y vuelve
+al inicio de sesión. Las tareas y el historial permanecen en SQLite.
+
 ## Diagramas
 
 Los diagramas se encuentran en la carpeta `docs`. 

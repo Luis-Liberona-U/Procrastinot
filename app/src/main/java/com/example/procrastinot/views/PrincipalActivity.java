@@ -18,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.procrastinot.R;
 import com.example.procrastinot.models.Tarea;
 import com.example.procrastinot.repositories.TareaRepository;
+import com.example.procrastinot.security.SesionManager;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -71,7 +72,7 @@ public class PrincipalActivity extends AppCompatActivity {
 
     /**
      * Recibe los datos del usuario y configura los botones de navegación.
-     * <p>
+     *
      * Si no se recibe el ID de usuario, muestra "Inicia sesión nuevamente" y cierra la pantalla.
      * El botón Comenzar tarea se habilita cuando se encuentra una próxima tarea.
      *
@@ -82,6 +83,16 @@ public class PrincipalActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_principal);
+
+
+        // Boton cerrar sesion
+        findViewById(R.id.btnCerrarSesion).setOnClickListener(v -> {
+            new SesionManager(this).cerrarSesion();
+
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        });
 
         // Asignar nombre al titulo
         usuarioId = getIntent().getLongExtra("usuario_id", -1);
@@ -215,10 +226,10 @@ public class PrincipalActivity extends AppCompatActivity {
 
     /**
      * Consulta las tareas del usuario y selecciona el inicio más cercano.
-     * <p>
+     *
      * Ignora las tareas desactivadas, eliminadas o sin un próximo inicio.
      * Usa el horario y la repetición para elegir la tarea.
-     * <p>
+     *
      * Actualiza la interfaz desde el hilo principal. Si no hay una tarea próxima, muestra un aviso y deshabilita Comenzar tarea.
      * Si falla SQLite, muestra "No se pudo consultar la próxima tarea".
      */
